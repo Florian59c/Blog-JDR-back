@@ -18,12 +18,20 @@ export class UserService {
   async createUser(createUserDto: CreateUserDto): Promise<string> {
     try {
       const { pseudo, email, password, confirmPassword } = createUserDto;
+      const existPseudo = await this.userRepository.findOneBy({ pseudo })
+      if (existPseudo) {
+        return 'Ce pseudo existe déjà';
+      }
+      const existEmail = await this.userRepository.findOneBy({ email })
+      if (existEmail) {
+        return 'Cette adresse mail existe déjà';
+      }
       if (password === confirmPassword) {
         const salt = await bcrypt.genSalt(); // Crée un salt (par défaut, 10 rounds)
         const hashedPassword = await bcrypt.hash(password, salt);
         const newUser = this.userRepository.create({ pseudo, email, password: hashedPassword, role: UserRole.USER }); // Prépare l'utilisateur
         this.userRepository.save(newUser); // Insère dans la base
-        return 'Votre compte a bien été créé';
+        return 'ok';
       }
       else {
         return 'Les mots de passe sont différents';
