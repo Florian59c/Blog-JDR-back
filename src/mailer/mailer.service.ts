@@ -16,7 +16,7 @@ export class MailerService {
     });
   }
 
-  async sendMail(sendMailDto: SendMailDto) {
+  async sendMail(sendMailDto: SendMailDto): Promise<Boolean> {
     const { from, subject, content } = sendMailDto;
     try {
       const info = await this.transporter.sendMail({
@@ -26,12 +26,10 @@ export class MailerService {
         text: content, // Contenu en texte brut
         replyTo: from, // Permet au destinataire de répondre à l'expéditeur réel
       });
-
-      console.log('Email envoyé: ', info.messageId);
-      return info;
+      return true;
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'e-mail: ', error);
-      throw error;
+      return false;
     }
   }
 }
