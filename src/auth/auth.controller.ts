@@ -2,6 +2,7 @@ import { Controller, Post, Res, Body, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login-auth.dto';
 import { Response, Request } from 'express';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -22,5 +23,10 @@ export class AuthController {
     const token = req.cookies['auth-token'];
 
     return this.authService.checkRole(token);
+  }
+
+  @Post('resetPassword')
+  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

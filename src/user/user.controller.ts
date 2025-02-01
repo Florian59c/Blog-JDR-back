@@ -3,6 +3,8 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetEmailDto } from './dto/get-email.dto';
+import { FindUserByIdDto } from './dto/find-user-by-id.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Controller('user')
 export class UserController {
@@ -21,6 +23,16 @@ export class UserController {
   @Post('findUserByMail')
   findEmail(@Body() getEmailDto: GetEmailDto) {
     return this.userService.findUserByMail(getEmailDto);
+  }
+
+  @Post('findUserById')
+  findUserById(@Body() findUserByIdDto: FindUserByIdDto) {
+    return this.userService.findUserById(findUserByIdDto);
+  }
+
+  @Post('updatePassword')
+  updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
+    return this.userService.updatePassword(updatePasswordDto);
   }
 
   @Get(':id')
