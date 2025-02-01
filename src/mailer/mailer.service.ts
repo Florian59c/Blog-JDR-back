@@ -47,7 +47,7 @@ export class MailerService {
       );
 
       // Construire l'URL de réinitialisation
-      const resetUrl = `http://localhost:3000/reset-password?token=${token}`;
+      const resetUrl = `http://localhost:3000/resetPassword?token=${token}`;
       try {
         await this.transporter.sendMail({
           from: '"No Reply" <noreply.idearium@gmail.com>',

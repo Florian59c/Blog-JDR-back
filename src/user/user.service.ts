@@ -7,6 +7,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetEmailDto } from './dto/get-email.dto';
 import { UserRole } from './user-role.enum';
+import { FindUserByIdDto } from './dto/find-user-by-id.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UserService {
@@ -55,6 +57,54 @@ export class UserService {
       return null;
     }
   }
+
+  async findUserById(findUserByIdDto: FindUserByIdDto): Promise<User> {
+    const { id } = findUserByIdDto;
+    // Convertir l'id en number si nécessaire
+    console.log("id reçu : ", id);
+
+    const idNumber = Number(id);
+    if (isNaN(idNumber)) {
+      throw new Error('L\'ID doit être un nombre valide');
+    }
+    const findedUser = await this.userRepository.findOneBy({ id: idNumber });
+    if (findedUser !== null) {
+      return findedUser;
+    } else {
+      return null;
+    }
+  }
+
+  async updatePassword(updatePasswordDto: UpdatePasswordDto): Promise<User> {
+    let { id, password } = updatePasswordDto;
+    console.log("type de l'id : ", typeof (id));
+
+
+    // Vérification et conversion de l'ID
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    if (isNaN(numericId)) {
+      throw new Error('L\'ID doit être un nombre valide');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: numericId } });
+
+    if (!user) {
+      throw new Error('Utilisateur non trouvé');
+    }
+
+    // Vérifier si le mot de passe est déjà haché
+    const isHashed = password.startsWith('$2b$') || password.startsWith('$2a$');
+
+    if (!isHashed) {
+      const salt = await bcrypt.genSalt();
+      password = await bcrypt.hash(password, salt);
+    }
+
+    user.password = password;
+
+    return await this.userRepository.save(user);
+  }
+
 
   findOne(id: number) {
     return `This action returns a #${id} user`;

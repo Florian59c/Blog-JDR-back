@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { UserRole } from './interfaces/auth.interface';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -61,6 +62,37 @@ export class AuthService {
       }
     } catch (err) {
       throw new Error('Unauthorized');
+    }
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const { token, password } = resetPasswordDto;
+    try {
+      console.log("token : ", token);
+
+      // Vérifier et décoder le token
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("decoded : ", decoded);
+      console.log("decoded.userId : ", decoded.userId);
+      console.log("decoded.userId type : ", typeof (decoded.userId));
+
+
+      // Récupérer l'utilisateur en BDD
+      const user = await this.userService.findUserById({ id: decoded.userId });
+      if (!user) {
+        throw new Error("Utilisateur non trouvé");
+      }
+      console.log("user : ", user);
+
+      // Hacher le nouveau mot de passe
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(password, salt);
+      await this.userService.updatePassword({ id: user.id, password: hashedPassword });
+
+      return "Mot de passe mis à jour avec succès";
+    } catch (error) {
+      console.error(error);
+      return "Lien invalide ou expiré";
     }
   }
 }
