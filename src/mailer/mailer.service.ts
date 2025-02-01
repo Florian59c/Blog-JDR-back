@@ -36,18 +36,17 @@ export class MailerService {
     }
   }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<string> {
     const { email } = forgotPasswordDto;
     const findedUserByMail = await this.userService.findUserByMail({ email });
     if (findedUserByMail) {
       const token = jwt.sign(
         { userId: findedUserByMail.id },
-        process.env.JWT_SECRET, // Assure-toi d'avoir une clé secrète dans tes variables d'env
-        { expiresIn: '1h' }
+        process.env.JWT_SECRET,
+        { expiresIn: '10m' }
       );
-
-      // Construire l'URL de réinitialisation
-      const resetUrl = `http://localhost:3000/resetPassword?token=${token}`;
+      // création de l'URL de réinitialisation avec un token dans l'url et contenant l'id de l'utilisateur
+      const resetUrl = `${process.env.CLIENT_URL}resetPassword?token=${token}`;
       try {
         await this.transporter.sendMail({
           from: '"No Reply" <noreply.idearium@gmail.com>',
@@ -55,13 +54,13 @@ export class MailerService {
           subject: "Idearium - Réinitialisation de votre mot de passe",
           html: `
           <p>Bonjour,</p>
-          <p>Vous avez demandé une réinitialisation de votre mot de passe. Cliquez sur le lien ci-dessous :</p>
+          <p>Vous avez demandé une réinitialisation de votre mot de passe. Pour cela, cliquez sur le lien ci-dessous :</p>
           <a href="${resetUrl}" target="_blank">Réinitialiser mon mot de passe</a>
-          <p>Ce lien est valable 1 heure.</p>
+          <p>Ce lien est valable 10 minutes.</p>
         `,
-          replyTo: "", // Désactive la possibilité de répondre
+          replyTo: "", // Désactive la possibilité de répondre au mail
         });
-        return "Un mail vous a été envoyé. S'il n'apparaît pas, vérifiez vos spams";
+        return "ok";
       } catch (error) {
         console.error('Erreur lors de l\'envoi de l\'e-mail: ', error);
         return "Une erreur est survenue lors de l'envoi du mail";

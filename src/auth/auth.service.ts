@@ -65,31 +65,21 @@ export class AuthService {
     }
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<string> {
     const { token, password } = resetPasswordDto;
     try {
-      console.log("token : ", token);
-
       // Vérifier et décoder le token
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      console.log("decoded : ", decoded);
-      console.log("decoded.userId : ", decoded.userId);
-      console.log("decoded.userId type : ", typeof (decoded.userId));
-
-
       // Récupérer l'utilisateur en BDD
       const user = await this.userService.findUserById({ id: decoded.userId });
       if (!user) {
         throw new Error("Utilisateur non trouvé");
       }
-      console.log("user : ", user);
-
       // Hacher le nouveau mot de passe
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(password, salt);
       await this.userService.updatePassword({ id: user.id, password: hashedPassword });
-
-      return "Mot de passe mis à jour avec succès";
+      return "ok";
     } catch (error) {
       console.error(error);
       return "Lien invalide ou expiré";

@@ -61,8 +61,6 @@ export class UserService {
   async findUserById(findUserByIdDto: FindUserByIdDto): Promise<User> {
     const { id } = findUserByIdDto;
     // Convertir l'id en number si nécessaire
-    console.log("id reçu : ", id);
-
     const idNumber = Number(id);
     if (isNaN(idNumber)) {
       throw new Error('L\'ID doit être un nombre valide');
@@ -77,34 +75,25 @@ export class UserService {
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto): Promise<User> {
     let { id, password } = updatePasswordDto;
-    console.log("type de l'id : ", typeof (id));
-
-
     // Vérification et conversion de l'ID
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
     if (isNaN(numericId)) {
-      throw new Error('L\'ID doit être un nombre valide');
+      throw new Error('L\'ID n\'est pas un nombre valide');
     }
-
-    const user = await this.userRepository.findOne({ where: { id: numericId } });
-
+    const user = await this.userRepository.findOneBy({ id: numericId });
     if (!user) {
       throw new Error('Utilisateur non trouvé');
     }
-
-    // Vérifier si le mot de passe est déjà haché
+    // Vérifier si le mot de passe est déjà haché (les mdp hashé avec bcrypt commence par $2a$ ou $2b$)
     const isHashed = password.startsWith('$2b$') || password.startsWith('$2a$');
-
+    // si le mot de passe n'est pas haché, on le hash
     if (!isHashed) {
       const salt = await bcrypt.genSalt();
       password = await bcrypt.hash(password, salt);
     }
-
     user.password = password;
-
     return await this.userRepository.save(user);
   }
-
 
   findOne(id: number) {
     return `This action returns a #${id} user`;
