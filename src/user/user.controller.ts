@@ -16,6 +16,12 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
+  @Post('getCurrentUser')
+  getCurrentUser(@Req() req: Request) {
+    const token = req.cookies['auth-token'];
+    return this.userService.getCurrentUser(token);
+  }
+
   @Get('getAllUsers')
   findAll() {
     return this.userService.findAll();

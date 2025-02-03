@@ -45,6 +45,23 @@ export class UserService {
     }
   }
 
+  async getCurrentUser(token: string) {
+    try {
+      if (!token) {
+        throw new Error("Nous n'avons pas trouvé vos informations");
+      }
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (currentUser !== null) {
+        return currentUser;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   findAll() {
     return this.userRepository.find();
   }

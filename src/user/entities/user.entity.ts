@@ -12,7 +12,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column() // Empêche la sélection par défaut
   password: string;
 
   @Column({
