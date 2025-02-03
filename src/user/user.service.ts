@@ -8,6 +8,8 @@ import { GetEmailDto } from './dto/get-email.dto';
 import { UserRole } from './user-role.enum';
 import { FindUserByIdDto } from './dto/find-user-by-id.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UserService {
@@ -69,6 +71,25 @@ export class UserService {
       return findedUser;
     } else {
       return null;
+    }
+  }
+
+  async updateUser(updateUserDto: UpdateUserDto, token: string): Promise<string> {
+    const { pseudo, email } = updateUserDto;
+    try {
+      if (!token) {
+        return "Un problème est survenu lors de l'envoi du formulaire";
+      } else {
+        const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+        const findedUser = await this.userRepository.findOneBy({ id: decoded.sub });
+        findedUser.pseudo = pseudo;
+        findedUser.email = email;
+        await this.userRepository.save(findedUser);
+        return "ok";
+      }
+    } catch (error) {
+      console.error(error);
+      return "Une erreur est survenue lors de la modification de votre profil";
     }
   }
 
