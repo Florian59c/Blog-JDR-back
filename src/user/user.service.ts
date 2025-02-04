@@ -48,7 +48,7 @@ export class UserService {
   async getCurrentUser(token: string) {
     try {
       if (!token) {
-        throw new Error("Nous n'avons pas trouvé vos informations");
+        throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
       }
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
