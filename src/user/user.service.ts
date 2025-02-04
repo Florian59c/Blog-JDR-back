@@ -45,13 +45,33 @@ export class UserService {
     }
   }
 
+  async getCurrentUser(token: string) {
+    try {
+      if (!token) {
+        throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
+      }
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (currentUser !== null) {
+        return currentUser;
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   findAll() {
     return this.userRepository.find();
   }
 
   async findUserByMail(getEmailDto: GetEmailDto): Promise<User> {
     const { email } = getEmailDto;
-    const findedUser = await this.userRepository.findOneBy({ email });
+    const findedUser = await this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
+    });
     if (findedUser !== null) {
       return findedUser;
     } else {
@@ -66,7 +86,10 @@ export class UserService {
     if (isNaN(idNumber)) {
       throw new Error('L\'ID doit être un nombre valide');
     }
-    const findedUser = await this.userRepository.findOneBy({ id: idNumber });
+    const findedUser = await this.userRepository.findOne({
+      where: { id: idNumber },
+      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
+    });
     if (findedUser !== null) {
       return findedUser;
     } else {
@@ -81,7 +104,10 @@ export class UserService {
         return "Un problème est survenu lors de l'envoi du formulaire";
       } else {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-        const findedUser = await this.userRepository.findOneBy({ id: decoded.sub });
+        const findedUser = await this.userRepository.findOne({
+          where: { id: decoded.sub },
+          select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
+        });
         findedUser.pseudo = pseudo;
         findedUser.email = email;
         await this.userRepository.save(findedUser);
@@ -100,7 +126,10 @@ export class UserService {
     if (isNaN(numericId)) {
       throw new Error('L\'ID n\'est pas un nombre valide');
     }
-    const user = await this.userRepository.findOneBy({ id: numericId });
+    const user = await this.userRepository.findOne({
+      where: { id: numericId },
+      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
+    });
     if (!user) {
       throw new Error('Utilisateur non trouvé');
     }
