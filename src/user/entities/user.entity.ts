@@ -12,7 +12,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ select: false }) // Empêche la sélection par défaut
   password: string;
 
   @Column({
@@ -21,4 +21,7 @@ export class User {
     default: UserRole.USER,
   })
   role: UserRole;
+
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  register_date: Date
 }
