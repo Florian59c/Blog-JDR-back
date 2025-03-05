@@ -6,6 +6,11 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from './mailer/mailer.module';
+import { CommentModule } from './comment/comment.module';
+import { JdrListModule } from './jdr_list/jdr_list.module';
+import { JdrModule } from './jdr/jdr.module';
+import { HeroModule } from './hero/hero.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -26,6 +31,11 @@ import { MailerModule } from './mailer/mailer.module';
     UserModule,
     AuthModule,
     MailerModule,
+    CommentModule,
+    NewsModule,
+    HeroModule,
+    JdrModule,
+    JdrListModule,
   ],
   controllers: [AppController],
   providers: [AppService],
