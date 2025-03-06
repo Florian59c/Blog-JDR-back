@@ -6,7 +6,7 @@ export class JdrList {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ unique: true })
+    @Column({ unique: true, nullable: false })
     name: string
 
     @OneToMany(() => Jdr, (jdr) => jdr.jdr_list, { cascade: true })
