@@ -11,7 +11,7 @@ export class HeroService {
     private readonly heroRepository: Repository<Hero>, // Injecte le Repository TypeORM
   ) { }
 
-  async createHero(createHeroDto: CreateHeroDto) {
+  async createHero(createHeroDto: CreateHeroDto): Promise<string> {
     const { title, link, tag } = createHeroDto;
     try {
       const existTitle = await this.heroRepository.findOneBy({ title })
