@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { JdrListService } from './jdr_list.service';
 import { CreateJdrListDto } from './dto/create-jdr_list.dto';
 
@@ -9,5 +9,10 @@ export class JdrListController {
   @Post('createJdrNameInList')
   createJdrNameInList(@Body() createJdrListDto: CreateJdrListDto) {
     return this.jdrListService.createJdrNameInList(createJdrListDto);
+  }
+
+  @Get('getAllJdrNames')
+  findAllJdrNames() {
+    return this.jdrListService.findAllJdrNamesByAlphabeticalOrder();
   }
 }

@@ -27,4 +27,10 @@ export class JdrListService {
       return "Un problème est survenu lors de l'ajout d'un nouveau JDR dans la liste";
     }
   }
+
+  findAllJdrNamesByAlphabeticalOrder() {
+    return this.jdrListRepository.find({
+      order: { name: 'ASC' }
+    });
+  }
 }
