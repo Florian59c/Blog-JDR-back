@@ -10,4 +10,9 @@ export class NewsController {
   createNews(@Body() createNewsDto: CreateNewsDto) {
     return this.newsService.createNews(createNewsDto);
   }
+
+  @Get('getAllNewsWithNewDate')
+  findAllNewsWithNewDate() {
+    return this.newsService.findAllNewsWithNewDate();
+  }
 }
