@@ -30,4 +30,10 @@ export class HeroService {
       return "Un problème est survenu lors de la création d'une histoire dont vous êtes le héro";
     }
   }
+
+  findAllHeroWithNewDate() {
+    return this.heroRepository.find({
+      order: { date: 'DESC' }
+    });
+  }
 }
