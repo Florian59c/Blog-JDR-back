@@ -27,7 +27,7 @@ export class NewsService {
       return "ok";
     } catch (error) {
       console.error(error);
-      return "Un problème est survenu lors de la création d'une histoire dont vous êtes le héro";
+      return "Un problème est survenu lors de la création d'une nouvelle";
     }
   }
 
