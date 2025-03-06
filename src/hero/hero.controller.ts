@@ -11,8 +11,8 @@ export class HeroController {
     return this.heroService.createHero(createHeroDto);
   }
 
-  @Get('getAllHero')
-  findAllHero() {
-    return this.heroService.findAllHero();
+  @Get('getAllHeroWithNewDate')
+  findAllHeroWithNewDate() {
+    return this.heroService.findAllHeroWithNewDate();
   }
 }

@@ -31,7 +31,9 @@ export class HeroService {
     }
   }
 
-  findAllHero() {
-    return this.heroRepository.find();
+  findAllHeroWithNewDate() {
+    return this.heroRepository.find({
+      order: { date: 'DESC' }
+    });
   }
 }
