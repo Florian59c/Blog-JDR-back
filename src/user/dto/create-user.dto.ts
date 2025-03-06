@@ -1,9 +1,11 @@
 import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
 
 export class CreateUserDto {
+  @IsNotEmpty({ message: 'Le pseudo est obligatoire' })
   pseudo: string;
 
   @IsEmail()
+  @IsNotEmpty({ message: 'L\'Email est obligatoire' })
   email: string;
 
   @IsNotEmpty()
