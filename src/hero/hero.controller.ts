@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get } from '@nestjs/common';
 import { HeroService } from './hero.service';
 import { CreateHeroDto } from './dto/create-hero.dto';
 
@@ -9,5 +9,10 @@ export class HeroController {
   @Post('createHero')
   createHero(@Body() createHeroDto: CreateHeroDto) {
     return this.heroService.createHero(createHeroDto);
+  }
+
+  @Get('getAllHero')
+  findAllHero() {
+    return this.heroService.findAllHero();
   }
 }
