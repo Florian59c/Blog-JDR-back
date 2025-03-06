@@ -30,4 +30,10 @@ export class NewsService {
       return "Un problème est survenu lors de la création d'une histoire dont vous êtes le héro";
     }
   }
+
+  findAllNewsWithNewDate() {
+    return this.newsRepository.find({
+      order: { date: 'DESC' }
+    });
+  }
 }
