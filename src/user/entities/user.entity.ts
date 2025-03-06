@@ -23,7 +23,7 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', update: false })
   register_date: Date
 
   @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
