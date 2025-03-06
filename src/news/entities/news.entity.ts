@@ -7,12 +7,14 @@ export class News {
     id: number;
 
     @Column()
+    @Column({ unique: true, nullable: false })
     title: string;
 
     @Column()
+    @Column({ unique: true, nullable: false })
     link: string;
 
-    @Column()
+    @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     date: Date;
 
     @Column()

@@ -1,1 +1,14 @@
-export class CreateNewsDto {}
+import { IsNotEmpty, IsString } from "class-validator";
+
+export class CreateNewsDto {
+    @IsString()
+    @IsNotEmpty({ message: 'Le titre ne peut pas être vide ou null' })
+    title: string;
+
+    @IsString()
+    @IsNotEmpty({ message: 'Le lien ne peut pas être vide ou null' })
+    link: string;
+
+    @IsString()
+    tag: string;
+}
