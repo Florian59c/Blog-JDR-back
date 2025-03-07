@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { UserRole } from '../user-role.enum';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 @Entity('user')
 export class User {
@@ -22,6 +23,9 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP', update: false })
   register_date: Date
+
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
+  comments: Comment[];
 }

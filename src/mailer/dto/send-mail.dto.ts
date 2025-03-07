@@ -1,13 +1,12 @@
 import { IsEmail, IsNotEmpty } from "class-validator";
 
 export class SendMailDto {
-    @IsEmail()
-    @IsNotEmpty({ message: 'Votre adresse mail est obligatoire' })
+    @IsEmail({}, { message: "L\'adresse mail doit avoir un format du type : exemple@gmail.com. " })
     from: string;
 
-    @IsNotEmpty({ message: 'L\'objet est obligatoire' })
+    @IsNotEmpty({ message: 'L\'objet est obligatoire. ' })
     subject: string;
 
-    @IsNotEmpty({ message: 'Le contenu est obligatoire' })
+    @IsNotEmpty({ message: 'Le contenu du mail est obligatoire.' })
     content: string;
 }
