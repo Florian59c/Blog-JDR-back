@@ -114,6 +114,20 @@ export class UserService {
           where: { id: decoded.sub },
           select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
         });
+        // Vérifier si le pseudo ou l'email existe déjà dans la base de données
+        const userWithSamePseudo = await this.userRepository.findOne({
+          where: { pseudo },
+        });
+        const userWithSameEmail = await this.userRepository.findOne({
+          where: { email },
+        });
+        // Vérifier si le pseudo ou l'email existe déjà mais appartient à un autre utilisateur
+        if (userWithSamePseudo && userWithSamePseudo.id !== findedUser.id) {
+          return "Le pseudo est déjà utilisé par un autre utilisateur";
+        }
+        if (userWithSameEmail && userWithSameEmail.id !== findedUser.id) {
+          return "L'email est déjà utilisé par un autre utilisateur";
+        }
         findedUser.pseudo = pseudo;
         findedUser.email = email;
         await this.userRepository.save(findedUser);
