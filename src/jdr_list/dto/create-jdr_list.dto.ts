@@ -1,7 +1,6 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty } from "class-validator";
 
 export class CreateJdrListDto {
-    @IsString()
-    @IsNotEmpty({ message: 'Le nom du JDR ne peut pas être vide ou null' })
+    @IsNotEmpty({ message: 'Le nom du JDR ne peut pas être vide ou null.' })
     name: string;
 }

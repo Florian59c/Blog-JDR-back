@@ -21,9 +21,6 @@ export class UserService {
   async createUser(createUserDto: CreateUserDto): Promise<string> {
     try {
       const { pseudo, email, password, confirmPassword, checkCGU } = createUserDto;
-      if (checkCGU !== true) {
-        return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
-      }
       const existPseudo = await this.userRepository.findOneBy({ pseudo })
       if (existPseudo) {
         return 'Ce pseudo existe déjà';
@@ -33,6 +30,9 @@ export class UserService {
         return 'Cette adresse mail existe déjà';
       }
       if (password === confirmPassword) {
+        if (checkCGU !== true) {
+          return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
+        }
         const salt = await bcrypt.genSalt(); // Crée un salt (par défaut, 10 rounds)
         const hashedPassword = await bcrypt.hash(password, salt);
         const newUser = this.userRepository.create({ pseudo, email, password: hashedPassword, role: UserRole.USER }); // Prépare l'utilisateur
@@ -48,13 +48,16 @@ export class UserService {
     }
   }
 
-  async getCurrentUser(token: string) {
+  async getCurrentUser(token: string): Promise<User> {
     try {
       if (!token) {
         throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
       }
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const currentUser = await this.userRepository.findOne({
+        where: { id: decoded.sub },
+        relations: ['comments'],
+      });
       if (currentUser !== null) {
         return currentUser;
       } else {
@@ -65,7 +68,7 @@ export class UserService {
     }
   }
 
-  findAll() {
+  findAll(): Promise<User[]> {
     return this.userRepository.find();
   }
 
@@ -111,6 +114,20 @@ export class UserService {
           where: { id: decoded.sub },
           select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
         });
+        // Vérifier si le pseudo ou l'email existe déjà dans la base de données
+        const userWithSamePseudo = await this.userRepository.findOne({
+          where: { pseudo },
+        });
+        const userWithSameEmail = await this.userRepository.findOne({
+          where: { email },
+        });
+        // Vérifier si le pseudo ou l'email existe déjà mais appartient à un autre utilisateur
+        if (userWithSamePseudo && userWithSamePseudo.id !== findedUser.id) {
+          return "Le pseudo est déjà utilisé par un autre utilisateur";
+        }
+        if (userWithSameEmail && userWithSameEmail.id !== findedUser.id) {
+          return "L'email est déjà utilisé par un autre utilisateur";
+        }
         findedUser.pseudo = pseudo;
         findedUser.email = email;
         await this.userRepository.save(findedUser);

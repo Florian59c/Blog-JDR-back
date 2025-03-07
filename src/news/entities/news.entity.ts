@@ -6,11 +6,9 @@ export class News {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
     @Column({ unique: true, nullable: false })
     title: string;
 
-    @Column()
     @Column({ unique: true, nullable: false })
     link: string;
 

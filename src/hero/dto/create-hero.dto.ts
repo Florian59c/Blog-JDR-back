@@ -1,14 +1,12 @@
 import { IsNotEmpty, IsString } from "class-validator";
 
 export class CreateHeroDto {
-    @IsString()
-    @IsNotEmpty({ message: 'Le titre ne peut pas être vide ou null' })
+    @IsNotEmpty({ message: 'Le titre est obligatoire. ' })
     title: string;
 
-    @IsString()
-    @IsNotEmpty({ message: 'Le lien ne peut pas être vide ou null' })
+    @IsNotEmpty({ message: 'Le lien est obligatoire. ' })
     link: string;
 
-    @IsString()
+    @IsString({ message: 'Le tag doit être une chaîne de caractères.' })
     tag: string;
 }

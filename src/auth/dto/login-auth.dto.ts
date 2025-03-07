@@ -1,9 +1,9 @@
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { IsEmail, MinLength } from "class-validator";
 
 export class LoginDto {
-      @IsEmail()
+      @IsEmail({}, { message: "L\'adresse mail doit avoir un format du type : exemple@gmail.com. " })
       email: string;
 
-      @IsNotEmpty()
+      @MinLength(8, { message: 'Votre mot de passe contient au moins 8 caractères.' })
       password: string;
 }
