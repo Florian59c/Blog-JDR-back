@@ -31,9 +31,10 @@ export class HeroService {
     }
   }
 
-  findAllHeroWithNewDate() {
+  findAllHeroWithNewDate(): Promise<Hero[]> {
     return this.heroRepository.find({
-      order: { date: 'DESC' }
+      order: { date: 'DESC' },
+      relations: ['comments'], // Charge les commentaires liés aux histoires dont vous êtes le hero
     });
   }
 }
