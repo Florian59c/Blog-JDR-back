@@ -21,9 +21,6 @@ export class UserService {
   async createUser(createUserDto: CreateUserDto): Promise<string> {
     try {
       const { pseudo, email, password, confirmPassword, checkCGU } = createUserDto;
-      if (checkCGU !== true) {
-        return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
-      }
       const existPseudo = await this.userRepository.findOneBy({ pseudo })
       if (existPseudo) {
         return 'Ce pseudo existe déjà';
@@ -33,6 +30,9 @@ export class UserService {
         return 'Cette adresse mail existe déjà';
       }
       if (password === confirmPassword) {
+        if (checkCGU !== true) {
+          return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
+        }
         const salt = await bcrypt.genSalt(); // Crée un salt (par défaut, 10 rounds)
         const hashedPassword = await bcrypt.hash(password, salt);
         const newUser = this.userRepository.create({ pseudo, email, password: hashedPassword, role: UserRole.USER }); // Prépare l'utilisateur
