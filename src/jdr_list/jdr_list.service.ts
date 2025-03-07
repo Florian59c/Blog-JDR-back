@@ -28,9 +28,10 @@ export class JdrListService {
     }
   }
 
-  findAllJdrNamesByAlphabeticalOrder() {
+  findAllJdrNamesByAlphabeticalOrder(): Promise<JdrList[]> {
     return this.jdrListRepository.find({
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
+      relations: ['jdr'],
     });
   }
 }
