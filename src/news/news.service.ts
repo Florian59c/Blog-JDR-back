@@ -31,9 +31,10 @@ export class NewsService {
     }
   }
 
-  findAllNewsWithNewDate() {
+  findAllNewsWithNewDate(): Promise<News[]> {
     return this.newsRepository.find({
-      order: { date: 'DESC' }
+      order: { date: 'DESC' },
+      relations: ['comments'],
     });
   }
 }
