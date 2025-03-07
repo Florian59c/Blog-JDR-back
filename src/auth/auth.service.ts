@@ -26,7 +26,7 @@ export class AuthService {
           const jwt = this.jwtService.sign(payload);
           res.cookie('auth-token', jwt, {
             httpOnly: true, // Empêche l'accès au cookie via JavaScript côté client
-            // secure: process.env.NODE_ENV === 'production', // Active uniquement en HTTPS en production
+            secure: process.env.NODE_ENV === 'production', // Active uniquement en HTTPS en production
             maxAge: 60 * 60 * 1000, // Durée de vie : 1 heure
             sameSite: 'strict', // Empêche l'envoi des cookies sur des requêtes cross-site
           });
@@ -39,14 +39,14 @@ export class AuthService {
       }
     } catch (error) {
       console.error(error);
-      return 'err';
+      return 'Une erreur est survenue lors de la connexion';
     }
   }
 
   async logout(res: Response): Promise<string> {
     res.clearCookie('auth-token', {
       httpOnly: true,
-      // secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
     });
     return 'Déconnexion réussie';
