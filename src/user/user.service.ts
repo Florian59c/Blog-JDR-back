@@ -20,7 +20,10 @@ export class UserService {
 
   async createUser(createUserDto: CreateUserDto): Promise<string> {
     try {
-      const { pseudo, email, password, confirmPassword } = createUserDto;
+      const { pseudo, email, password, confirmPassword, checkCGU } = createUserDto;
+      if (checkCGU !== true) {
+        return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
+      }
       const existPseudo = await this.userRepository.findOneBy({ pseudo })
       if (existPseudo) {
         return 'Ce pseudo existe déjà';

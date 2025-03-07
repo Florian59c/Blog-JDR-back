@@ -15,4 +15,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(8, { message: 'Le mot de passe doit contenir au moins 8 carractères' })
   confirmPassword: string;
+
+  @IsNotEmpty({ message: 'L\'approbation des conditions générales d\'utilisation est obligatoire' })
+  checkCGU: boolean;
 }
