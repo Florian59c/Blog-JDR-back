@@ -1,6 +1,7 @@
 import { IsNotEmpty, MinLength } from "class-validator";
 
 export class UpdatePasswordDto {
+    @IsNotEmpty({ message: "ID manquant" })
     id: number;
 
     @IsNotEmpty({ message: "Le mot de passe est obligatoire" })
