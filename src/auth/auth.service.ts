@@ -19,24 +19,18 @@ export class AuthService {
     try {
       const { email, password } = loginDto;
       const findedUserByMail = await this.userService.findUserByMail({ email });
-      if (findedUserByMail) {
-        const isPasswordValid = await bcrypt.compare(password, findedUserByMail.password)
-        if (isPasswordValid) {
-          const payload = { sub: findedUserByMail.id, role: findedUserByMail.role }; // Inclut l'ID et le rôle
-          const jwt = this.jwtService.sign(payload);
-          res.cookie('auth-token', jwt, {
-            httpOnly: true, // Empêche l'accès au cookie via JavaScript côté client
-            secure: process.env.NODE_ENV === 'production', // Active uniquement en HTTPS en production
-            maxAge: 60 * 60 * 1000, // Durée de vie : 1 heure
-            sameSite: 'strict', // Empêche l'envoi des cookies sur des requêtes cross-site
-          });
-          return 'ok';
-        } else {
-          return 'Le mot de passe est incorrect';
-        }
-      } else {
-        return "L'adresse mail est incorrecte";
+      if (!findedUserByMail || !(await bcrypt.compare(password, findedUserByMail.password))) {
+        return "L'adresse mail ou le mot de passe est incorrect";
       }
+      const payload = { sub: findedUserByMail.id, role: findedUserByMail.role }; // Inclut l'ID et le rôle
+      const jwt = this.jwtService.sign(payload);
+      res.cookie('auth-token', jwt, {
+        httpOnly: true, // Empêche l'accès au cookie via JavaScript côté client
+        secure: process.env.NODE_ENV === 'production', // Active uniquement en HTTPS en production
+        maxAge: 60 * 60 * 1000, // Durée de vie : 1 heure
+        sameSite: 'strict', // Empêche l'envoi des cookies sur des requêtes cross-site
+      });
+      return 'ok';
     } catch (error) {
       console.error(error);
       return 'Une erreur est survenue lors de la connexion';
