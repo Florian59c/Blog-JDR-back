@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Jdr } from './entities/jdr.entity';
 import { JdrList } from 'src/jdr_list/entities/jdr_list.entity';
+import { GetJdrByTypeDto } from './dto/Get-jdr-by-type.dto';
 
 @Injectable()
 export class JdrService {
@@ -30,19 +31,27 @@ export class JdrService {
       if (!jdrList) {
         return "Le nom du JDR spécifiée n'existe pas dans la liste.";
       }
-      // Création du nouvel objet Jdr
       const newJdr = this.jdrRepository.create({
         title,
         link,
         is_scenario,
-        jdr_list: jdrList  // Utilisation de l'entité et non de l'ID
+        jdr_list: jdrList
       });
-      // Sauvegarde en base
       await this.jdrRepository.save(newJdr);
       return "ok";
     } catch (error) {
       console.error(error);
       return "Un problème est survenu lors de la création d'un JDR";
     }
+  }
+
+  // Donne la liste des scénarios si "is_scenario" passé dans le body est vrai. Donne la liste des aide de jeu sinon.
+  async getJdrByType(getJdrByTypeDto: GetJdrByTypeDto) {
+    const { is_scenario } = getJdrByTypeDto;
+    return this.jdrRepository.find({
+      where: { is_scenario },
+      order: { date: 'DESC' },
+      relations: ['comments', 'jdr_list'], // Charge les commentaires et le nom du JDR liés aux JDR
+    });
   }
 }
