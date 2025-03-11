@@ -7,16 +7,16 @@ export class Jdr {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ unique: true, nullable: false })
     title: string;
 
-    @Column()
+    @Column({ unique: true, nullable: false })
     link: string;
 
-    @Column()
+    @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     date: Date;
 
-    @Column()
+    @Column({ nullable: false })
     is_scenario: boolean;
 
     @OneToMany(() => Comment, (comment) => comment.jdr, { cascade: true })
