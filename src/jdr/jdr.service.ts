@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Jdr } from './entities/jdr.entity';
 import { JdrList } from 'src/jdr_list/entities/jdr_list.entity';
-import { GetJdrByTypeDto } from './dto/Get-jdr-by-type.dto';
+import { GetsortedJdrDto } from './dto/get-sorted-jdr.dto';
 
 @Injectable()
 export class JdrService {
@@ -45,13 +45,25 @@ export class JdrService {
     }
   }
 
-  // Donne la liste des scénarios si "is_scenario" passé dans le body est vrai. Donne la liste des aide de jeu sinon.
-  async getJdrByType(getJdrByTypeDto: GetJdrByTypeDto) {
-    const { is_scenario } = getJdrByTypeDto;
+  // lorsque jdrName === default, Donne la liste des scénarios si "is_scenario" passé dans le body est vrai. Donne la liste des aide de jeu sinon.
+  // lorsque jdrName !== default, vérifie si la valeur de jdrName correspond à un nom de JDR dans la BDD "jdrList"
+  // Si c'est le cas, donne la liste des scénarios ou des aide jeu trié par nom du JDR souhaité
+  async getsortedJdr(getsortedJdrDto: GetsortedJdrDto) {
+    const { is_scenario, jdrName } = getsortedJdrDto;
+    if (jdrName !== "default") {
+      const jdrList = await this.jdrListRepository.findOne({
+        where: { name: jdrName },
+      });
+      if (!jdrList) {
+        throw new Error(`Le nom de la liste de JDR "${jdrName}" n'a pas été trouvé.`);
+      }
+    }
     return this.jdrRepository.find({
-      where: { is_scenario },
+      where: jdrName === "default"
+        ? { is_scenario }
+        : { is_scenario, jdr_list: { name: jdrName } },
       order: { date: 'DESC' },
-      relations: ['comments', 'jdr_list'], // Charge les commentaires et le nom du JDR liés aux JDR
+      relations: ['comments', 'jdr_list'], // Charger les commentaires et la liste liée
     });
   }
 }
