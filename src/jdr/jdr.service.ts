@@ -48,7 +48,7 @@ export class JdrService {
   // lorsque jdrName === default, Donne la liste des scénarios si "is_scenario" passé dans le body est vrai. Donne la liste des aide de jeu sinon.
   // lorsque jdrName !== default, vérifie si la valeur de jdrName correspond à un nom de JDR dans la BDD "jdrList"
   // Si c'est le cas, donne la liste des scénarios ou des aide jeu trié par nom du JDR souhaité
-  async getsortedJdr(getsortedJdrDto: GetsortedJdrDto) {
+  async getsortedJdr(getsortedJdrDto: GetsortedJdrDto): Promise<Jdr[]> {
     const { is_scenario, jdrName } = getsortedJdrDto;
     if (jdrName !== "default") {
       const jdrList = await this.jdrListRepository.findOne({

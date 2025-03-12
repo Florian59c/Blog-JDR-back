@@ -9,10 +9,10 @@ export class Comment {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ nullable: false })
     content: string;
 
-    @Column()
+    @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
     creation_date: Date;
 
     @Column({ default: false })
