@@ -8,6 +8,7 @@ import { Hero } from 'src/hero/entities/hero.entity';
 import { News } from 'src/news/entities/news.entity';
 import { Jdr } from 'src/jdr/entities/jdr.entity';
 import { User } from 'src/user/entities/user.entity';
+import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 
 @Injectable()
 export class CommentService {
@@ -60,5 +61,33 @@ export class CommentService {
       console.error(error);
       return "Un problème est survenu lors de la création du commentaire";
     }
+  }
+
+  // Affiche les commentaires liés à un post (selon le type : hero, jdr, news) avec le pseudo de l'utilisateur ayant ecrit le commentaire
+  async getCommentsByPost(getCommentsByPostDto: GetCommentsByPostDto): Promise<Comment[]> {
+    const { postType, postId } = getCommentsByPostDto;
+    const postTypeMapping: Record<string, string> = {
+      hero: "comment.hero",
+      jdr: "comment.jdr",
+      news: "comment.news",
+    };
+    const relationColumn = postTypeMapping[postType];
+    if (!relationColumn) {
+      throw new Error("Le type de post est invalide");
+    }
+
+    return this.commentRepository
+      .createQueryBuilder("comment")
+      .leftJoin("comment.user", "user")
+      .leftJoin(`${relationColumn}`, "post") // Jointure dynamique sur la relation
+      .select([
+        "comment.id",
+        "comment.content",
+        "comment.creation_date",
+        "user.pseudo", // Sélectionne uniquement le pseudo
+      ])
+      .where("post.id = :postId", { postId }) // Filtre sur l'ID du post
+      .orderBy("comment.creation_date", "DESC")
+      .getMany();
   }
 }
