@@ -9,6 +9,7 @@ import { News } from 'src/news/entities/news.entity';
 import { Jdr } from 'src/jdr/entities/jdr.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
+import { ReportCommentDto } from './dto/report-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -89,5 +90,26 @@ export class CommentService {
       .where("post.id = :postId", { postId }) // Filtre sur l'ID du post
       .orderBy("comment.creation_date", "DESC")
       .getMany();
+  }
+
+  async reportComment(reportCommentDto: ReportCommentDto, token: string): Promise<string> {
+    const { commentId } = reportCommentDto;
+    if (!token) {
+      return "Seuls les utilisateurs connectés peuvent signaler un commentaire";
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await this.userRepository.findOneBy({ id: decoded.sub });
+      const reportedComment = await this.commentRepository.findOneBy({ id: commentId });
+      if (!user || !reportedComment) {
+        return "Utilisateur ou commentaire introuvable";
+      }
+      reportedComment.is_report = true;
+      await this.commentRepository.save(reportedComment);
+      return "Le commentaire a bien été signalé !";
+    } catch (error) {
+      console.error(error);
+      return "Une erreur est survenue lors du signalement du commentaire";
+    }
   }
 }
