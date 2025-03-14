@@ -124,7 +124,10 @@ export class CommentService {
         throw new Error("Utilisateur introuvable");
       }
       const findedComments = await this.commentRepository.find({
-        where: { user: { id: currentUser.id } }
+        where: { user: { id: currentUser.id } },
+        order: {
+          creation_date: 'DESC'
+        },
       });
       return findedComments;
     } catch (error) {
