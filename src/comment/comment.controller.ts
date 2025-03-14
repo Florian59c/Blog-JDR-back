@@ -25,4 +25,10 @@ export class CommentController {
     const token = req.cookies['auth-token'];
     return this.commentService.reportComment(reportCommentDto, token);
   }
+
+  @Post('getCurrentUserComments')
+  getCurrentUserComments(@Req() req: Request) {
+    const token = req.cookies['auth-token'];
+    return this.commentService.getCurrentUserComments(token);
+  }
 }

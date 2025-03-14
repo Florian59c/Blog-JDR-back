@@ -112,4 +112,26 @@ export class CommentService {
       return "Une erreur est survenue lors du signalement du commentaire";
     }
   }
+
+  async getCurrentUserComments(token: string): Promise<Comment[]> {
+    if (!token) {
+      throw new Error("Seuls les utilisateurs connectés peuvent voir leurs commentaires");
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (!currentUser) {
+        throw new Error("Utilisateur introuvable");
+      }
+      const findedComments = await this.commentRepository.find({
+        where: { user: { id: currentUser.id } }
+      });
+      return findedComments;
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
+      }
+      throw new Error("Une erreur est survenue lors de l'affichage de vos commentaires");
+    }
+  }
 }
