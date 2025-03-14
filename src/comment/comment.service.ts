@@ -134,4 +134,31 @@ export class CommentService {
       throw new Error("Une erreur est survenue lors de l'affichage de vos commentaires");
     }
   }
+
+  async deleteCommentByUser(token: string, id: number): Promise<string> {
+    if (!token) {
+      return "Vous devez être connecté pour faire la suppression";
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const comment = await this.commentRepository.findOne({
+        where: { id },
+        relations: ["user"],
+      });
+      if (!currentUser) {
+        return "Utilisateur introuvable";
+      }
+      if (!comment) {
+        return "Commentaire introuvable";
+      }
+      if (comment.user.id !== currentUser.id) {
+        return "Vous ne pouvez pas supprimer un commentaires qui ne vous appartient pas";
+      }
+      await this.commentRepository.delete(id);
+      return "ok";
+    } catch (error) {
+      return "Une erreur est survenue lors de la suppression du commentaire";
+    }
+  }
 }

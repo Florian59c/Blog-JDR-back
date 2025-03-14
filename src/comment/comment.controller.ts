@@ -31,4 +31,10 @@ export class CommentController {
     const token = req.cookies['auth-token'];
     return this.commentService.getCurrentUserComments(token);
   }
+
+  @Post('deleteCommentByUser')
+  deleteCommentByUser(@Req() req: Request, @Body('id') id: number) {
+    const token = req.cookies['auth-token'];
+    return this.commentService.deleteCommentByUser(token, id);
+  }
 }
