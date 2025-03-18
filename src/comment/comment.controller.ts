@@ -4,6 +4,7 @@ import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
+import { mModifyCommentDto } from './dto/modify-comment.dto';
 
 @Controller('comment')
 export class CommentController {
@@ -30,6 +31,12 @@ export class CommentController {
   getCurrentUserComments(@Req() req: Request) {
     const token = req.cookies['auth-token'];
     return this.commentService.getCurrentUserComments(token);
+  }
+
+  @Post('modifyCommentByUser')
+  modifyCommentByUser(@Body() modifyCommentDto: mModifyCommentDto, @Req() req: Request) {
+    const token = req.cookies['auth-token'];
+    return this.commentService.modifyCommentByUser(modifyCommentDto, token);
   }
 
   @Post('deleteCommentByUser')

@@ -10,6 +10,7 @@ import { Jdr } from 'src/jdr/entities/jdr.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
+import { mModifyCommentDto } from './dto/modify-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -138,6 +139,35 @@ export class CommentService {
     }
   }
 
+  async modifyCommentByUser(modifyCommentDto: mModifyCommentDto, token: string): Promise<string> {
+    const { commentId, content } = modifyCommentDto;
+    if (!token) {
+      return "Vous devez être connecté pour faire la modification";
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const comment = await this.commentRepository.findOne({
+        where: { id: commentId },
+        relations: ["user"],
+      });
+      if (!currentUser) {
+        return "Utilisateur introuvable";
+      }
+      if (!comment) {
+        return "Commentaire introuvable";
+      }
+      if (comment.user.id !== currentUser.id) {
+        return "Vous ne pouvez pas modifier un commentaire qui ne vous appartient pas";
+      }
+      comment.content = content;
+      await this.commentRepository.save(comment);
+      return "ok";
+    } catch (error) {
+      return "Une erreur est survenue lors de la suppression du commentaire";
+    }
+  }
+
   async deleteCommentByUser(token: string, id: number): Promise<string> {
     if (!token) {
       return "Vous devez être connecté pour faire la suppression";
@@ -156,7 +186,7 @@ export class CommentService {
         return "Commentaire introuvable";
       }
       if (comment.user.id !== currentUser.id) {
-        return "Vous ne pouvez pas supprimer un commentaires qui ne vous appartient pas";
+        return "Vous ne pouvez pas supprimer un commentaire qui ne vous appartient pas";
       }
       await this.commentRepository.delete(id);
       return "ok";
