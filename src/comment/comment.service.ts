@@ -121,6 +121,24 @@ export class CommentService {
     });
   }
 
+  async cancelReportForComment(id: number): Promise<string> {
+    if (!id) {
+      return "L'id du commentaire est obligatoire";
+    }
+    try {
+      const comment = await this.commentRepository.findOneBy({ id });
+      if (!comment) {
+        return "Commentaire introuvable";
+      }
+      comment.is_report = false;
+      await this.commentRepository.save(comment);
+      return "Le signalement du commentaire a bien été annulé";
+    } catch (error) {
+      console.error(error);
+      return "Une erreur est survenue lors de l'annulation du signalement du commentaire";
+    }
+  }
+
   async getCurrentUserComments(token: string): Promise<Comment[]> {
     if (!token) {
       throw new Error("Seuls les utilisateurs connectés peuvent voir leurs commentaires");

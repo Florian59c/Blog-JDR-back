@@ -34,6 +34,12 @@ export class CommentController {
     return this.commentService.getReportedComments();
   }
 
+  @Post('cancelReportForComment')
+  @UseGuards(AdminGuard)
+  cancelReportForComment(@Body('id') id: number) {
+    return this.commentService.cancelReportForComment(id);
+  }
+
   @Post('getCurrentUserComments')
   getCurrentUserComments(@Req() req: Request) {
     const token = req.cookies['auth-token'];
