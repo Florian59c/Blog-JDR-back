@@ -114,6 +114,13 @@ export class CommentService {
     }
   }
 
+  getReportedComments(): Promise<Comment[]> {
+    return this.commentRepository.find({
+      where: { is_report: true },
+      relations: ['user']
+    });
+  }
+
   async getCurrentUserComments(token: string): Promise<Comment[]> {
     if (!token) {
       throw new Error("Seuls les utilisateurs connectés peuvent voir leurs commentaires");
