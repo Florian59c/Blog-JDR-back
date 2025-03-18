@@ -219,4 +219,20 @@ export class CommentService {
       return "Une erreur est survenue lors de la suppression du commentaire";
     }
   }
+
+  async deleteCommentByAdmin(id: number): Promise<string> {
+    if (!id) {
+      return "L'id du commentaire est obligatoire";
+    }
+    try {
+      const comment = await this.commentRepository.findOneBy({ id });
+      if (!comment) {
+        return "Commentaire introuvable";
+      }
+      await this.commentRepository.delete(id);
+      return "ok";
+    } catch (error) {
+      return "Une erreur est survenue lors de la suppression du commentaire";
+    }
+  }
 }
