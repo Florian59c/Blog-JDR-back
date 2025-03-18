@@ -57,4 +57,10 @@ export class CommentController {
     const token = req.cookies['auth-token'];
     return this.commentService.deleteCommentByUser(token, id);
   }
+
+  @Post('deleteCommentByAdmin')
+  @UseGuards(AdminGuard)
+  deleteCommentByAdmin(@Body('id') id: number) {
+    return this.commentService.deleteCommentByAdmin(id);
+  }
 }
