@@ -10,6 +10,7 @@ import { FindUserByIdDto } from './dto/find-user-by-id.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as jwt from 'jsonwebtoken';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -162,5 +163,27 @@ export class UserService {
     }
     user.password = password;
     return await this.userRepository.save(user);
+  }
+
+  async deleteUser(token: string, res: Response): Promise<string> {
+    if (!token) {
+      return "Vous devez être connecté pour supprimer votre compte";
+    }
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (!currentUser) {
+        return "Utilisateur introuvable";
+      }
+      await this.userRepository.delete(currentUser.id);
+      res.clearCookie('auth-token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+      });
+      return "ok";
+    } catch (error) {
+      return "Une erreur est survenue lors de la suppression du compte";
+    }
   }
 }

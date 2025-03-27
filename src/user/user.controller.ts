@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetEmailDto } from './dto/get-email.dto';
 import { FindUserByIdDto } from './dto/find-user-by-id.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('user')
@@ -46,5 +46,11 @@ export class UserController {
   @Post('updatePassword')
   updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
     return this.userService.updatePassword(updatePasswordDto);
+  }
+
+  @Post('deleteUser')
+  deleteUser(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = req.cookies['auth-token'];
+    return this.userService.deleteUser(token, res);
   }
 }
