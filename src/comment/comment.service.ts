@@ -80,24 +80,36 @@ export class CommentService {
       jdr: "comment.jdr",
       news: "comment.news",
     };
+
     const relationColumn = postTypeMapping[postType];
     if (!relationColumn) {
-      throw new Error("Le type de post est invalide");
+      throw new BadRequestException("Le type de post est invalide");
     }
 
-    return this.commentRepository
-      .createQueryBuilder("comment")
-      .leftJoin("comment.user", "user")
-      .leftJoin(`${relationColumn}`, "post") // Jointure dynamique sur la relation
-      .select([
-        "comment.id",
-        "comment.content",
-        "comment.creation_date",
-        "user.pseudo", // Sélectionne uniquement le pseudo
-      ])
-      .where("post.id = :postId", { postId }) // Filtre sur l'ID du post
-      .orderBy("comment.creation_date", "DESC")
-      .getMany();
+    try {
+      const comments = await this.commentRepository
+        .createQueryBuilder("comment")
+        .leftJoin("comment.user", "user")
+        .leftJoin(`${relationColumn}`, "post") // Jointure dynamique sur la relation
+        .select([
+          "comment.id",
+          "comment.content",
+          "comment.creation_date",
+          "user.pseudo", // Sélectionne uniquement le pseudo
+        ])
+        .where("post.id = :postId", { postId }) // Filtre sur l'ID du post
+        .orderBy("comment.creation_date", "DESC")
+        .getMany();
+
+      if (comments.length === 0) {
+        throw new NotFoundException("Aucun commentaire trouvé pour ce post"); // Si aucun commentaire n'est trouvé, lève une exception NotFoundException
+      }
+
+      return comments;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Un problème est survenu lors de la récupération des commentaires");
+    }
   }
 
   async reportComment(reportCommentDto: ReportCommentDto, token: string): Promise<string> {
