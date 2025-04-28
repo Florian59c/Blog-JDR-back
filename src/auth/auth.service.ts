@@ -62,13 +62,13 @@ export class AuthService {
   checkRole(token: string): UserRole {
     try {
       if (!token) {
-        return { role: 'none' };
+        return { role: 'none' };  // Retourne 'none' si aucun token n'est fourni
       } else {
         const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-        return { role: decoded.role };
+        return { role: decoded.role || 'none' };  // Retourne le rôle décodé, ou 'none' si absent
       }
     } catch (err) {
-      throw new Error('Unauthorized');
+      return { role: 'none' };  // Pour toutes les erreurs, retourne 'none'
     }
   }
 
