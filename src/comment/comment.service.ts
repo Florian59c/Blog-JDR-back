@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
@@ -11,6 +11,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
 import { mModifyCommentDto } from './dto/modify-comment.dto';
+import { ResponseMessage } from 'src/auth/interfaces/response.interface';
 
 @Injectable()
 export class CommentService {
@@ -27,21 +28,25 @@ export class CommentService {
     private readonly jdrRepository: Repository<Jdr>,
   ) { }
 
-  async createComment(createCommentDto: CreateCommentDto, token: string): Promise<string> {
+  async createComment(createCommentDto: CreateCommentDto, token: string): Promise<ResponseMessage> {
     const { content, postType, postId } = createCommentDto;
+
+    if (!token) {
+      throw new UnauthorizedException("Vous devez être connecté pour ajouter un commentaire");
+    }
+
     try {
-      if (!token) {
-        return "Vous devez être connecté pour ajouter un commentaire";
-      }
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const user = await this.userRepository.findOneBy({ id: decoded.sub });
 
       if (!user) {
-        return "Utilisateur introuvable, veuillez vous reconnecter.";
+        throw new UnauthorizedException("Utilisateur introuvable, veuillez vous reconnecter.");
       }
+
       if (postType !== "hero" && postType !== "jdr" && postType !== "news") {
-        return "Nous n'avons pas réussi à trouver le post sur lequel vous essayez d'ajouter un commentaire";
+        throw new BadRequestException("Nous n'avons pas réussi à trouver le post sur lequel vous essayez d'ajouter un commentaire");
       }
+
       const repositories = {
         hero: this.heroRepository,
         news: this.newsRepository,
@@ -50,18 +55,20 @@ export class CommentService {
       const entity = await repositories[postType].findOneBy({ id: postId });
 
       if (!entity) {
-        return "Nous n'avons pas réussi à trouver le type de post sur lequel vous essayez d'ajouter un commentaire";
+        throw new NotFoundException("Nous n'avons pas réussi à trouver le type de post sur lequel vous essayez d'ajouter un commentaire");
       }
+
       const newComment = this.commentRepository.create({
         content,
         user,
         [postType]: entity
       });
       await this.commentRepository.save(newComment);
-      return "ok";
+
+      return { message: "Votre commentaire a bien été créé" };
     } catch (error) {
       console.error(error);
-      return "Un problème est survenu lors de la création du commentaire";
+      throw new Error("Un problème est survenu lors de la création du commentaire");
     }
   }
 
