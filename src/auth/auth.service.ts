@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login-auth.dto';
 import { UserService } from 'src/user/user.service';
@@ -72,24 +72,31 @@ export class AuthService {
     }
   }
 
-  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<string> {
+  async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<ResponseMessage> {
     const { token, password } = resetPasswordDto;
     try {
       // Vérifier et décoder le token
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+
       // Récupérer l'utilisateur en BDD
       const user = await this.userService.findUserById({ id: decoded.userId });
       if (!user) {
-        throw new Error("Utilisateur non trouvé");
+        throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
       }
+
       // Hacher le nouveau mot de passe
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(password, salt);
       await this.userService.updatePassword({ id: user.id, password: hashedPassword });
-      return "ok";
+
+      return { message: 'Mot de passe réinitialisé avec succès' };
     } catch (error) {
+      if (error instanceof jwt.JsonWebTokenError) {
+        // Token invalide ou expiré
+        throw new HttpException('Lien invalide ou expiré', HttpStatus.UNAUTHORIZED);
+      }
       console.error(error);
-      return "Lien invalide ou expiré";
+      throw new HttpException('Erreur interne du serveur', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }
