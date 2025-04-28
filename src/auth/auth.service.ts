@@ -45,13 +45,18 @@ export class AuthService {
     }
   }
 
-  async logout(res: Response): Promise<string> {
-    res.clearCookie('auth-token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-    });
-    return 'Déconnexion réussie';
+  async logout(res: Response): Promise<ResponseMessage> {
+    try {
+      res.clearCookie('auth-token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+      });
+      return { message: 'Déconnexion réussie' };
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+      return { message: 'Erreur lors de la déconnexion', error: error.message };
+    }
   }
 
   checkRole(token: string): UserRole {
