@@ -133,11 +133,22 @@ export class CommentService {
     }
   }
 
-  getReportedComments(): Promise<Comment[]> {
-    return this.commentRepository.find({
-      where: { is_report: true },
-      relations: ['user']
-    });
+  async getReportedComments(): Promise<Comment[]> {
+    try {
+      const reportedComments = await this.commentRepository.find({
+        where: { is_report: true },
+        relations: ['user']
+      });
+
+      if (reportedComments.length === 0) {
+        throw new NotFoundException("Aucun commentaire signalé trouvé.");
+      }
+
+      return reportedComments;
+    } catch (error) {
+      console.error(error);
+      throw new Error("Un problème est survenu lors de la récupération des commentaires signalés.");
+    }
   }
 
   async cancelReportForComment(id: number): Promise<string> {
