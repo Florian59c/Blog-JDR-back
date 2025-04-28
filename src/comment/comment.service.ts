@@ -162,21 +162,27 @@ export class CommentService {
     }
   }
 
-  async cancelReportForComment(id: number): Promise<string> {
+  async cancelReportForComment(id: number): Promise<ResponseMessage> {
     if (!id) {
-      return "L'id du commentaire est obligatoire";
+      throw new BadRequestException("L'id du commentaire est obligatoire.");
     }
+
     try {
       const comment = await this.commentRepository.findOneBy({ id });
       if (!comment) {
-        return "Commentaire introuvable";
+        throw new NotFoundException('Commentaire introuvable.');
       }
+
       comment.is_report = false;
       await this.commentRepository.save(comment);
-      return "Le signalement du commentaire a bien été annulé";
+
+      return { message: "Le signalement du commentaire a bien été annulé" };
     } catch (error) {
       console.error(error);
-      return "Une erreur est survenue lors de l'annulation du signalement du commentaire";
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Une erreur est survenue lors de l\'annulation du signalement du commentaire.');
     }
   }
 
