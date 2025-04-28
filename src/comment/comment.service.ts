@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
@@ -112,24 +112,35 @@ export class CommentService {
     }
   }
 
-  async reportComment(reportCommentDto: ReportCommentDto, token: string): Promise<string> {
+  async reportComment(reportCommentDto: ReportCommentDto, token: string): Promise<ResponseMessage> {
     const { commentId } = reportCommentDto;
+
     if (!token) {
-      return "Seuls les utilisateurs connectés peuvent signaler un commentaire";
+      throw new UnauthorizedException("Seuls les utilisateurs connectés peuvent signaler un commentaire.");
     }
+
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const user = await this.userRepository.findOneBy({ id: decoded.sub });
-      const reportedComment = await this.commentRepository.findOneBy({ id: commentId });
-      if (!user || !reportedComment) {
-        return "Utilisateur ou commentaire introuvable";
+      if (!user) {
+        throw new NotFoundException("Utilisateur introuvable.");
       }
+
+      const reportedComment = await this.commentRepository.findOneBy({ id: commentId });
+      if (!reportedComment) {
+        throw new NotFoundException("Commentaire introuvable.");
+      }
+
       reportedComment.is_report = true;
       await this.commentRepository.save(reportedComment);
-      return "Le commentaire a bien été signalé !";
+
+      return { message: "Le commentaire a bien été signalé !" };
     } catch (error) {
       console.error(error);
-      return "Une erreur est survenue lors du signalement du commentaire";
+      if (error instanceof UnauthorizedException || error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error; // Relance proprement les erreurs déjà gérées
+      }
+      throw new InternalServerErrorException("Une erreur est survenue lors du signalement du commentaire.");
     }
   }
 
