@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Comment } from './entities/comment.entity';
@@ -10,7 +10,7 @@ import { Jdr } from 'src/jdr/entities/jdr.entity';
 import { User } from 'src/user/entities/user.entity';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
-import { mModifyCommentDto } from './dto/modify-comment.dto';
+import { ModifyCommentDto } from './dto/modify-comment.dto';
 import { ResponseMessage } from 'src/interfaces/response.interface';
 
 @Injectable()
@@ -220,32 +220,38 @@ export class CommentService {
     }
   }
 
-  async modifyCommentByUser(modifyCommentDto: mModifyCommentDto, token: string): Promise<string> {
+  async modifyCommentByUser(modifyCommentDto: ModifyCommentDto, token: string): Promise<ResponseMessage> {
     const { commentId, content } = modifyCommentDto;
+
     if (!token) {
-      return 'Vous devez être connecté pour faire la modification';
+      throw new UnauthorizedException('Vous devez être connecté pour faire la modification');
     }
+
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (!currentUser) {
+        throw new NotFoundException('Utilisateur introuvable');
+      }
+
       const comment = await this.commentRepository.findOne({
         where: { id: commentId },
         relations: ['user'],
       });
-      if (!currentUser) {
-        return 'Utilisateur introuvable';
-      }
       if (!comment) {
-        return 'Commentaire introuvable';
+        throw new NotFoundException('Commentaire introuvable');
       }
+
       if (comment.user.id !== currentUser.id) {
-        return 'Vous ne pouvez pas modifier un commentaire qui ne vous appartient pas';
+        throw new ForbiddenException('Vous ne pouvez pas modifier un commentaire qui ne vous appartient pas');
       }
+
       comment.content = content;
       await this.commentRepository.save(comment);
-      return 'ok';
+
+      return { message: 'Votre commentaire a bien été modifié' };
     } catch (error) {
-      return 'Une erreur est survenue lors de la suppression du commentaire';
+      throw new InternalServerErrorException('Une erreur est survenue lors de la modification du commentaire');
     }
   }
 
