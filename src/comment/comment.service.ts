@@ -32,7 +32,7 @@ export class CommentService {
     const { content, postType, postId } = createCommentDto;
 
     if (!token) {
-      throw new UnauthorizedException("Vous devez être connecté pour ajouter un commentaire");
+      throw new UnauthorizedException('Vous devez être connecté pour ajouter un commentaire');
     }
 
     try {
@@ -40,11 +40,11 @@ export class CommentService {
       const user = await this.userRepository.findOneBy({ id: decoded.sub });
 
       if (!user) {
-        throw new UnauthorizedException("Utilisateur introuvable, veuillez vous reconnecter.");
+        throw new UnauthorizedException('Utilisateur introuvable, veuillez vous reconnecter.');
       }
 
-      if (postType !== "hero" && postType !== "jdr" && postType !== "news") {
-        throw new BadRequestException("Nous n'avons pas réussi à trouver le post sur lequel vous essayez d'ajouter un commentaire");
+      if (postType !== 'hero' && postType !== 'jdr' && postType !== 'news') {
+        throw new BadRequestException('Nous n\'avons pas réussi à trouver le post sur lequel vous essayez d\'ajouter un commentaire');
       }
 
       const repositories = {
@@ -55,7 +55,7 @@ export class CommentService {
       const entity = await repositories[postType].findOneBy({ id: postId });
 
       if (!entity) {
-        throw new NotFoundException("Nous n'avons pas réussi à trouver le type de post sur lequel vous essayez d'ajouter un commentaire");
+        throw new NotFoundException('Nous n\'avons pas réussi à trouver le type de post sur lequel vous essayez d\'ajouter un commentaire');
       }
 
       const newComment = this.commentRepository.create({
@@ -65,10 +65,10 @@ export class CommentService {
       });
       await this.commentRepository.save(newComment);
 
-      return { message: "Votre commentaire a bien été créé" };
+      return { message: 'Votre commentaire a bien été créé' };
     } catch (error) {
       console.error(error);
-      throw new Error("Un problème est survenu lors de la création du commentaire");
+      throw new Error('Un problème est survenu lors de la création du commentaire');
     }
   }
 
@@ -76,39 +76,39 @@ export class CommentService {
   async getCommentsByPost(getCommentsByPostDto: GetCommentsByPostDto): Promise<Comment[]> {
     const { postType, postId } = getCommentsByPostDto;
     const postTypeMapping: Record<string, string> = {
-      hero: "comment.hero",
-      jdr: "comment.jdr",
-      news: "comment.news",
+      hero: 'comment.hero',
+      jdr: 'comment.jdr',
+      news: 'comment.news',
     };
 
     const relationColumn = postTypeMapping[postType];
     if (!relationColumn) {
-      throw new BadRequestException("Le type de post est invalide");
+      throw new BadRequestException('Le type de post est invalide');
     }
 
     try {
       const comments = await this.commentRepository
-        .createQueryBuilder("comment")
-        .leftJoin("comment.user", "user")
-        .leftJoin(`${relationColumn}`, "post") // Jointure dynamique sur la relation
+        .createQueryBuilder('comment')
+        .leftJoin('comment.user', 'user')
+        .leftJoin(`${relationColumn}`, 'post') // Jointure dynamique sur la relation
         .select([
-          "comment.id",
-          "comment.content",
-          "comment.creation_date",
-          "user.pseudo", // Sélectionne uniquement le pseudo
+          'comment.id',
+          'comment.content',
+          'comment.creation_date',
+          'user.pseudo', // Sélectionne uniquement le pseudo
         ])
-        .where("post.id = :postId", { postId }) // Filtre sur l'ID du post
-        .orderBy("comment.creation_date", "DESC")
+        .where('post.id = :postId', { postId }) // Filtre sur l'ID du post
+        .orderBy('comment.creation_date', 'DESC')
         .getMany();
 
       if (comments.length === 0) {
-        throw new NotFoundException("Aucun commentaire trouvé pour ce post"); // Si aucun commentaire n'est trouvé, lève une exception NotFoundException
+        throw new NotFoundException('Aucun commentaire trouvé pour ce post'); // Si aucun commentaire n'est trouvé, lève une exception NotFoundException
       }
 
       return comments;
     } catch (error) {
       console.error(error);
-      throw new Error("Un problème est survenu lors de la récupération des commentaires");
+      throw new Error('Un problème est survenu lors de la récupération des commentaires');
     }
   }
 
@@ -116,31 +116,31 @@ export class CommentService {
     const { commentId } = reportCommentDto;
 
     if (!token) {
-      throw new UnauthorizedException("Seuls les utilisateurs connectés peuvent signaler un commentaire.");
+      throw new UnauthorizedException('Seuls les utilisateurs connectés peuvent signaler un commentaire.');
     }
 
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const user = await this.userRepository.findOneBy({ id: decoded.sub });
       if (!user) {
-        throw new NotFoundException("Utilisateur introuvable.");
+        throw new NotFoundException('Utilisateur introuvable.');
       }
 
       const reportedComment = await this.commentRepository.findOneBy({ id: commentId });
       if (!reportedComment) {
-        throw new NotFoundException("Commentaire introuvable.");
+        throw new NotFoundException('Commentaire introuvable.');
       }
 
       reportedComment.is_report = true;
       await this.commentRepository.save(reportedComment);
 
-      return { message: "Le commentaire a bien été signalé !" };
+      return { message: 'Le commentaire a bien été signalé !' };
     } catch (error) {
       console.error(error);
       if (error instanceof UnauthorizedException || error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error; // Relance proprement les erreurs déjà gérées
       }
-      throw new InternalServerErrorException("Une erreur est survenue lors du signalement du commentaire.");
+      throw new InternalServerErrorException('Une erreur est survenue lors du signalement du commentaire.');
     }
   }
 
@@ -152,19 +152,19 @@ export class CommentService {
       });
 
       if (reportedComments.length === 0) {
-        throw new NotFoundException("Aucun commentaire signalé trouvé.");
+        throw new NotFoundException('Aucun commentaire signalé trouvé.');
       }
 
       return reportedComments;
     } catch (error) {
       console.error(error);
-      throw new Error("Un problème est survenu lors de la récupération des commentaires signalés.");
+      throw new Error('Un problème est survenu lors de la récupération des commentaires signalés.');
     }
   }
 
   async cancelReportForComment(id: number): Promise<ResponseMessage> {
     if (!id) {
-      throw new BadRequestException("L'id du commentaire est obligatoire.");
+      throw new BadRequestException('L\'id du commentaire est obligatoire.');
     }
 
     try {
@@ -176,7 +176,7 @@ export class CommentService {
       comment.is_report = false;
       await this.commentRepository.save(comment);
 
-      return { message: "Le signalement du commentaire a bien été annulé" };
+      return { message: 'Le signalement du commentaire a bien été annulé' };
     } catch (error) {
       console.error(error);
       if (error instanceof BadRequestException || error instanceof NotFoundException) {
@@ -188,7 +188,7 @@ export class CommentService {
 
   async getCurrentUserComments(token: string): Promise<Comment[]> {
     if (!token) {
-      throw new UnauthorizedException("Seuls les utilisateurs connectés peuvent voir leurs commentaires");
+      throw new UnauthorizedException('Seuls les utilisateurs connectés peuvent voir leurs commentaires');
     }
 
     let decoded: any;
@@ -196,14 +196,14 @@ export class CommentService {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException("Votre session a expiré. Veuillez vous reconnecter.");
+        throw new UnauthorizedException('Votre session a expiré. Veuillez vous reconnecter.');
       }
-      throw new UnauthorizedException("Jeton invalide");
+      throw new UnauthorizedException('Jeton invalide');
     }
 
     const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
     if (!currentUser) {
-      throw new NotFoundException("Utilisateur introuvable");
+      throw new NotFoundException('Utilisateur introuvable');
     }
 
     try {
@@ -216,79 +216,79 @@ export class CommentService {
 
       return findedComments;
     } catch (error) {
-      throw new InternalServerErrorException("Une erreur est survenue lors de l'affichage de vos commentaires");
+      throw new InternalServerErrorException('Une erreur est survenue lors de l\'affichage de vos commentaires');
     }
   }
 
   async modifyCommentByUser(modifyCommentDto: mModifyCommentDto, token: string): Promise<string> {
     const { commentId, content } = modifyCommentDto;
     if (!token) {
-      return "Vous devez être connecté pour faire la modification";
+      return 'Vous devez être connecté pour faire la modification';
     }
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
       const comment = await this.commentRepository.findOne({
         where: { id: commentId },
-        relations: ["user"],
+        relations: ['user'],
       });
       if (!currentUser) {
-        return "Utilisateur introuvable";
+        return 'Utilisateur introuvable';
       }
       if (!comment) {
-        return "Commentaire introuvable";
+        return 'Commentaire introuvable';
       }
       if (comment.user.id !== currentUser.id) {
-        return "Vous ne pouvez pas modifier un commentaire qui ne vous appartient pas";
+        return 'Vous ne pouvez pas modifier un commentaire qui ne vous appartient pas';
       }
       comment.content = content;
       await this.commentRepository.save(comment);
-      return "ok";
+      return 'ok';
     } catch (error) {
-      return "Une erreur est survenue lors de la suppression du commentaire";
+      return 'Une erreur est survenue lors de la suppression du commentaire';
     }
   }
 
   async deleteCommentByUser(token: string, id: number): Promise<string> {
     if (!token) {
-      return "Vous devez être connecté pour faire la suppression";
+      return 'Vous devez être connecté pour faire la suppression';
     }
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
       const comment = await this.commentRepository.findOne({
         where: { id },
-        relations: ["user"],
+        relations: ['user'],
       });
       if (!currentUser) {
-        return "Utilisateur introuvable";
+        return 'Utilisateur introuvable';
       }
       if (!comment) {
-        return "Commentaire introuvable";
+        return 'Commentaire introuvable';
       }
       if (comment.user.id !== currentUser.id) {
-        return "Vous ne pouvez pas supprimer un commentaire qui ne vous appartient pas";
+        return 'Vous ne pouvez pas supprimer un commentaire qui ne vous appartient pas';
       }
       await this.commentRepository.delete(id);
-      return "ok";
+      return 'ok';
     } catch (error) {
-      return "Une erreur est survenue lors de la suppression du commentaire";
+      return 'Une erreur est survenue lors de la suppression du commentaire';
     }
   }
 
   async deleteCommentByAdmin(id: number): Promise<string> {
     if (!id) {
-      return "L'id du commentaire est obligatoire";
+      return 'L\'id du commentaire est obligatoire';
     }
     try {
       const comment = await this.commentRepository.findOneBy({ id });
       if (!comment) {
-        return "Commentaire introuvable";
+        return 'Commentaire introuvable';
       }
       await this.commentRepository.delete(id);
-      return "ok";
+      return 'ok';
     } catch (error) {
-      return "Une erreur est survenue lors de la suppression du commentaire";
+      return 'Une erreur est survenue lors de la suppression du commentaire';
     }
   }
 }

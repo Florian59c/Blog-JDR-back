@@ -22,7 +22,7 @@ export class AuthService {
       const findedUserByMail = await this.userService.findUserByMail({ email });
 
       if (!findedUserByMail || !(await bcrypt.compare(password, findedUserByMail.password))) {
-        throw new UnauthorizedException("L'adresse mail ou le mot de passe est incorrect");
+        throw new UnauthorizedException('L\'adresse mail ou le mot de passe est incorrect');
       }
 
       const payload = { sub: findedUserByMail.id, role: findedUserByMail.role }; // Inclut l'ID et le rôle
