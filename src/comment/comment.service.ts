@@ -287,19 +287,22 @@ export class CommentService {
     }
   }
 
-  async deleteCommentByAdmin(id: number): Promise<string> {
+  async deleteCommentByAdmin(id: number): Promise<ResponseMessage> {
     if (!id) {
-      return 'L\'id du commentaire est obligatoire';
+      throw new BadRequestException('L\'id du commentaire est obligatoire');
     }
+
     try {
       const comment = await this.commentRepository.findOneBy({ id });
       if (!comment) {
-        return 'Commentaire introuvable';
+        throw new NotFoundException('Commentaire introuvable');
       }
+
       await this.commentRepository.delete(id);
-      return 'ok';
+
+      return { message: 'Le commentaire a bien été supprimé' };
     } catch (error) {
-      return 'Une erreur est survenue lors de la suppression du commentaire';
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du commentaire');
     }
   }
 }
