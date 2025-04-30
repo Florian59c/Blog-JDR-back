@@ -255,30 +255,35 @@ export class CommentService {
     }
   }
 
-  async deleteCommentByUser(token: string, id: number): Promise<string> {
+  async deleteCommentByUser(token: string, id: number): Promise<ResponseMessage> {
     if (!token) {
-      return 'Vous devez être connecté pour faire la suppression';
+      throw new UnauthorizedException('Vous devez être connecté pour faire la suppression');
     }
+
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      if (!currentUser) {
+        throw new NotFoundException('Utilisateur introuvable');
+      }
+
       const comment = await this.commentRepository.findOne({
         where: { id },
         relations: ['user'],
       });
-      if (!currentUser) {
-        return 'Utilisateur introuvable';
-      }
       if (!comment) {
-        return 'Commentaire introuvable';
+        throw new NotFoundException('Commentaire introuvable');
       }
+
       if (comment.user.id !== currentUser.id) {
-        return 'Vous ne pouvez pas supprimer un commentaire qui ne vous appartient pas';
+        throw new ForbiddenException('Vous ne pouvez pas supprimer un commentaire qui ne vous appartient pas');
       }
+
       await this.commentRepository.delete(id);
-      return 'ok';
+
+      return { message: 'Votre commentaire à bien été supprimé' };
     } catch (error) {
-      return 'Une erreur est survenue lors de la suppression du commentaire';
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du commentaire');
     }
   }
 
