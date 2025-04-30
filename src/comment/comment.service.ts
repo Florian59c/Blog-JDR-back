@@ -11,7 +11,7 @@ import { User } from 'src/user/entities/user.entity';
 import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
 import { mModifyCommentDto } from './dto/modify-comment.dto';
-import { ResponseMessage } from 'src/auth/interfaces/response.interface';
+import { ResponseMessage } from 'src/interfaces/response.interface';
 
 @Injectable()
 export class CommentService {
@@ -188,26 +188,35 @@ export class CommentService {
 
   async getCurrentUserComments(token: string): Promise<Comment[]> {
     if (!token) {
-      throw new Error("Seuls les utilisateurs connectés peuvent voir leurs commentaires");
+      throw new UnauthorizedException("Seuls les utilisateurs connectés peuvent voir leurs commentaires");
     }
+
+    let decoded: any;
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
-      if (!currentUser) {
-        throw new Error("Utilisateur introuvable");
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException("Votre session a expiré. Veuillez vous reconnecter.");
       }
+      throw new UnauthorizedException("Jeton invalide");
+    }
+
+    const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+    if (!currentUser) {
+      throw new NotFoundException("Utilisateur introuvable");
+    }
+
+    try {
       const findedComments = await this.commentRepository.find({
         where: { user: { id: currentUser.id } },
         order: {
           creation_date: 'DESC'
         },
       });
+
       return findedComments;
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
-        throw new Error("Votre session a expiré. Veuillez vous reconnecter.");
-      }
-      throw new Error("Une erreur est survenue lors de l'affichage de vos commentaires");
+      throw new InternalServerErrorException("Une erreur est survenue lors de l'affichage de vos commentaires");
     }
   }
 

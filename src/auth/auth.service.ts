@@ -5,9 +5,9 @@ import { UserService } from 'src/user/user.service';
 import * as bcrypt from 'bcrypt';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { UserRole } from './interfaces/auth.interface';
+import { UserRole } from 'src/interfaces/auth.interface';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { ResponseMessage } from './interfaces/response.interface';
+import { ResponseMessage } from 'src/interfaces/response.interface';
 
 @Injectable()
 export class AuthService {
