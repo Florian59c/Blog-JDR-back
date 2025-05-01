@@ -39,10 +39,17 @@ export class NewsService {
     }
   }
 
-  findAllNewsWithNewDate(): Promise<News[]> {
-    return this.newsRepository.find({
-      order: { date: 'DESC' },
-      relations: ['comments'],
-    });
+  async findAllNewsWithNewDate(): Promise<News[]> {
+    try {
+      return await this.newsRepository.find({
+        order: { date: 'DESC' },
+        relations: ['comments'],
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la récupération des nouvelles.'
+      );
+    }
   }
 }
