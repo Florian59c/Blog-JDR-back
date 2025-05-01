@@ -39,9 +39,16 @@ export class HeroService {
   }
 
   findAllHeroWithNewDate(): Promise<Hero[]> {
-    return this.heroRepository.find({
-      order: { date: 'DESC' },
-      relations: ['comments'], // Charge les commentaires liés aux histoires dont vous êtes le hero
-    });
+    try {
+      return this.heroRepository.find({
+        order: { date: 'DESC' },
+        relations: ['comments'], // Charge les commentaires liés aux histoires dont vous êtes le hero
+      });
+    } catch (error) {
+      console.error('Erreur lors de la récupération des histoires :', error);
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la récupération des histoires.',
+      );
+    }
   }
 }
