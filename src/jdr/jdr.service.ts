@@ -18,6 +18,7 @@ export class JdrService {
 
   async createJdr(createJdrDto: CreateJdrDto): Promise<ResponseMessage> {
     const { title, link, is_scenario, jdr_list_id } = createJdrDto;
+
     try {
       const existTitle = await this.jdrRepository.findOneBy({ title });
       if (existTitle) {
@@ -58,20 +59,31 @@ export class JdrService {
   // Si c'est le cas, donne la liste des scénarios ou des aide jeu trié par nom du JDR souhaité
   async getsortedJdr(getsortedJdrDto: GetsortedJdrDto): Promise<Jdr[]> {
     const { is_scenario, jdrName } = getsortedJdrDto;
-    if (jdrName !== 'default') {
-      const jdrList = await this.jdrListRepository.findOne({
-        where: { name: jdrName },
-      });
-      if (!jdrList) {
-        throw new Error(`Le nom de la liste de JDR '${jdrName}' n'a pas été trouvé.`);
+
+    try {
+      if (jdrName !== 'default') {
+        const jdrList = await this.jdrListRepository.findOne({
+          where: { name: jdrName },
+        });
+
+        if (!jdrList) {
+          throw new BadRequestException(`Le nom '${jdrName}' n'a pas été trouvé dans la liste de JDR`);
+        }
       }
+
+      const jdrs = await this.jdrRepository.find({
+        where: jdrName === 'default'
+          ? { is_scenario }
+          : { is_scenario, jdr_list: { name: jdrName } },
+        order: { date: 'DESC' },
+        relations: ['comments', 'jdr_list'],
+      });
+
+      return jdrs;
+    } catch (error) {
+      console.error(error);
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la récupération des JDR.');
     }
-    return this.jdrRepository.find({
-      where: jdrName === 'default'
-        ? { is_scenario }
-        : { is_scenario, jdr_list: { name: jdrName } },
-      order: { date: 'DESC' },
-      relations: ['comments', 'jdr_list'], // Charger les commentaires et la liste liée
-    });
   }
 }
