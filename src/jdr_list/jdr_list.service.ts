@@ -35,10 +35,17 @@ export class JdrListService {
     }
   }
 
-  findAllJdrNamesByAlphabeticalOrder(): Promise<JdrList[]> {
-    return this.jdrListRepository.find({
-      order: { name: 'ASC' },
-      relations: ['jdr'],
-    });
+  async findAllJdrNamesByAlphabeticalOrder(): Promise<JdrList[]> {
+    try {
+      return await this.jdrListRepository.find({
+        order: { name: 'ASC' },
+        relations: ['jdr'],
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la récupération des JDR par ordre alphabétique',
+      );
+    }
   }
 }
