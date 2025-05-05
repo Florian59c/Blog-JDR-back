@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -11,6 +11,7 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
+import { ResponseMessage } from 'src/interfaces/response.interface';
 
 @Injectable()
 export class UserService {
@@ -19,33 +20,40 @@ export class UserService {
     private readonly userRepository: Repository<User>, // Injecte le Repository TypeORM
   ) { }
 
-  async createUser(createUserDto: CreateUserDto): Promise<string> {
+  async createUser(createUserDto: CreateUserDto): Promise<ResponseMessage> {
+    const { pseudo, email, password, confirmPassword, checkCGU } = createUserDto;
+
+    const existPseudo = await this.userRepository.findOneBy({ pseudo })
+    if (existPseudo) {
+      throw new BadRequestException('Ce pseudo existe déjà');;
+    }
+
+    const existEmail = await this.userRepository.findOneBy({ email })
+    if (existEmail) {
+      throw new BadRequestException('Cette adresse mail existe déjà');
+    }
+
+    if (password !== confirmPassword) {
+      throw new BadRequestException('Les mots de passe sont différents');
+    }
+
+    if (checkCGU !== true) {
+      throw new BadRequestException('L\'approbation des conditions générales d\'utilisation est obligatoire');
+    }
+
     try {
-      const { pseudo, email, password, confirmPassword, checkCGU } = createUserDto;
-      const existPseudo = await this.userRepository.findOneBy({ pseudo })
-      if (existPseudo) {
-        return 'Ce pseudo existe déjà';
-      }
-      const existEmail = await this.userRepository.findOneBy({ email })
-      if (existEmail) {
-        return 'Cette adresse mail existe déjà';
-      }
-      if (password === confirmPassword) {
-        if (checkCGU !== true) {
-          return 'L\'approbation des conditions générales d\'utilisation est obligatoire';
-        }
-        const salt = await bcrypt.genSalt(); // Crée un salt (par défaut, 10 rounds)
-        const hashedPassword = await bcrypt.hash(password, salt);
-        const newUser = this.userRepository.create({ pseudo, email, password: hashedPassword, role: UserRole.USER }); // Prépare l'utilisateur
-        this.userRepository.save(newUser); // Insère dans la base
-        return 'ok';
-      }
-      else {
-        return 'Les mots de passe sont différents';
-      }
+      const salt = await bcrypt.genSalt(); // Crée un salt (par défaut, 10 rounds)
+      const hashedPassword = await bcrypt.hash(password, salt);
+      const newUser = this.userRepository.create({ pseudo, email, password: hashedPassword, role: UserRole.USER }); // Prépare l'utilisateur
+      await this.userRepository.save(newUser); // Insère dans la base
+
+      return { message: 'Votre compte a été créé avec succès' };
     } catch (error) {
       console.error(error);
-      return 'Un problème est survenu lors de la création du compte'
+      if (error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la création du compte',
+      );
     }
   }
 
