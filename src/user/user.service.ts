@@ -59,7 +59,7 @@ export class UserService {
 
   async getCurrentUser(token: string): Promise<User> {
     if (!token) {
-      throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
+      throw new Error('Nous n\'avons pas trouvé vos informations. Si l\'erreur persiste, essayez de vous reconnecter');
     }
 
     try {
@@ -70,7 +70,7 @@ export class UserService {
       });
 
       if (!currentUser) {
-        throw new NotFoundException("L'utilisateur associé au token n'existe pas");
+        throw new NotFoundException('L\'utilisateur associé au token n\'existe pas');
       }
 
       return currentUser;
@@ -108,14 +108,14 @@ export class UserService {
         .getOne();
 
       if (!findedUser) {
-        throw new NotFoundException("Aucun utilisateur trouvé avec cette adresse mail");
+        throw new NotFoundException('Aucun utilisateur trouvé avec cette adresse mail');
       }
 
       return findedUser;
     } catch (error) {
       console.error(error);
       if (error instanceof NotFoundException) throw error;
-      throw new InternalServerErrorException("Erreur lors de la recherche de l'utilisateur");
+      throw new InternalServerErrorException('Erreur lors de la recherche de l\'utilisateur');
     }
   }
 
@@ -152,7 +152,7 @@ export class UserService {
     const { pseudo, email } = updateUserDto;
 
     if (!token) {
-      throw new BadRequestException("Token manquant ou invalide");
+      throw new BadRequestException('Token manquant ou invalide');
     }
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
@@ -162,7 +162,7 @@ export class UserService {
         .getOne();
 
       if (!findedUser) {
-        throw new NotFoundException("Utilisateur non trouvé");
+        throw new NotFoundException('Utilisateur non trouvé');
       }
 
       // Vérifier si le pseudo ou l'email existe déjà dans la base de données
@@ -175,23 +175,23 @@ export class UserService {
 
       // Vérifier si le pseudo ou l'email existe déjà mais appartient à un autre utilisateur
       if (userWithSamePseudo && userWithSamePseudo.id !== findedUser.id) {
-        throw new BadRequestException("Le pseudo est déjà utilisé par un autre utilisateur");
+        throw new BadRequestException('Le pseudo est déjà utilisé par un autre utilisateur');
       }
       if (userWithSameEmail && userWithSameEmail.id !== findedUser.id) {
-        throw new BadRequestException("L'email est déjà utilisé par un autre utilisateur");
+        throw new BadRequestException('L\'email est déjà utilisé par un autre utilisateur');
       }
 
       findedUser.pseudo = pseudo;
       findedUser.email = email;
       await this.userRepository.save(findedUser);
 
-      return { message: "Votre profil a bien été modifié" };
+      return { message: 'Votre profil a bien été modifié' };
     } catch (error) {
       console.error(error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error; // Propager les exceptions spécifiques
       }
-      throw new InternalServerErrorException("Une erreur est survenue lors de la modification de votre profil");
+      throw new InternalServerErrorException('Une erreur est survenue lors de la modification de votre profil');
     }
   }
 
@@ -238,25 +238,32 @@ export class UserService {
     }
   }
 
-  async deleteUser(token: string, res: Response): Promise<string> {
+  async deleteUser(token: string, res: Response): Promise<ResponseMessage> {
     if (!token) {
-      return "Vous devez être connecté pour supprimer votre compte";
+      throw new BadRequestException('Vous devez être connecté pour supprimer votre compte');
     }
+
     try {
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+
       if (!currentUser) {
-        return "Utilisateur introuvable";
+        throw new NotFoundException('Utilisateur introuvable');
       }
+
       await this.userRepository.delete(currentUser.id);
+
       res.clearCookie('auth-token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
       });
-      return "ok";
+
+      return { message: 'Votre compte a été supprimé avec succès' };
     } catch (error) {
-      return "Une erreur est survenue lors de la suppression du compte";
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du compte');
     }
   }
 }
