@@ -21,7 +21,6 @@ export class AuthController {
   @Post('checkRole')
   checkRole(@Req() req: Request) {
     const token = req.cookies['auth-token'];
-
     return this.authService.checkRole(token);
   }
 

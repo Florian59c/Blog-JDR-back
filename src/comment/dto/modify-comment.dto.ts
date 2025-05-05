@@ -1,6 +1,6 @@
 import { IsNotEmpty } from "class-validator";
 
-export class mModifyCommentDto {
+export class ModifyCommentDto {
     @IsNotEmpty({ message: 'L\'id du commentaire est obligatoire. ' })
     commentId: number;
 
