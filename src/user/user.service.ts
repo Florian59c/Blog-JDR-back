@@ -196,28 +196,46 @@ export class UserService {
   }
 
   async updatePassword(updatePasswordDto: UpdatePasswordDto): Promise<User> {
-    let { id, password } = updatePasswordDto;
+    const { id, password } = updatePasswordDto;
+
     // Vérification et conversion de l'ID
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
     if (isNaN(numericId)) {
-      throw new Error('L\'ID n\'est pas un nombre valide');
+      throw new BadRequestException('L\'ID n\'est pas un nombre valide');
     }
-    const user = await this.userRepository.findOne({
-      where: { id: numericId },
-      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
-    });
-    if (!user) {
-      throw new Error('Utilisateur non trouvé');
+
+    try {
+      const user = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.id = :id', { id: numericId })
+        .addSelect('user.password') // Inclure le mot de passe explicitement
+        .getOne();
+
+      if (!user) {
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+
+      // Vérifier si le mot de passe est déjà haché (les mdp hashé avec bcrypt commence par $2a$ ou $2b$)
+      const isHashed = password.startsWith('$2b$') || password.startsWith('$2a$');
+
+      // si le mot de passe n'est pas haché, on le hash
+      if (!isHashed) {
+        const salt = await bcrypt.genSalt();
+        user.password = await bcrypt.hash(password, salt);
+      } else {
+        user.password = password; // Si le mot de passe est déjà haché, on le garde tel quel
+      }
+
+      return await this.userRepository.save(user);
+    } catch (error) {
+      console.error(error);
+      // Gérer les exceptions spécifiques
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      // Si c'est une autre erreur, on lance une exception interne
+      throw new InternalServerErrorException('Une erreur est survenue lors de la mise à jour du mot de passe');
     }
-    // Vérifier si le mot de passe est déjà haché (les mdp hashé avec bcrypt commence par $2a$ ou $2b$)
-    const isHashed = password.startsWith('$2b$') || password.startsWith('$2a$');
-    // si le mot de passe n'est pas haché, on le hash
-    if (!isHashed) {
-      const salt = await bcrypt.genSalt();
-      password = await bcrypt.hash(password, salt);
-    }
-    user.password = password;
-    return await this.userRepository.save(user);
   }
 
   async deleteUser(token: string, res: Response): Promise<string> {
