@@ -89,7 +89,12 @@ export class UserService {
   }
 
   findAll(): Promise<User[]> {
-    return this.userRepository.find();
+    try {
+      return this.userRepository.find();
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Une erreur est survenue lors de la récupération des utilisateurs');
+    }
   }
 
   async findUserByMail(getEmailDto: GetEmailDto): Promise<User> {
