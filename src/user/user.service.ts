@@ -99,14 +99,23 @@ export class UserService {
 
   async findUserByMail(getEmailDto: GetEmailDto): Promise<User> {
     const { email } = getEmailDto;
-    const findedUser = await this.userRepository.findOne({
-      where: { email },
-      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
-    });
-    if (findedUser !== null) {
+
+    try {
+      const findedUser = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.email = :email', { email })
+        .addSelect('user.password') // ajoute uniquement le champ exclu
+        .getOne();
+
+      if (!findedUser) {
+        throw new NotFoundException("Aucun utilisateur trouvé avec cette adresse mail");
+      }
+
       return findedUser;
-    } else {
-      return null;
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException("Erreur lors de la recherche de l'utilisateur");
     }
   }
 
