@@ -121,19 +121,30 @@ export class UserService {
 
   async findUserById(findUserByIdDto: FindUserByIdDto): Promise<User> {
     const { id } = findUserByIdDto;
+
     // Convertir l'id en number si nécessaire
     const idNumber = Number(id);
     if (isNaN(idNumber)) {
-      throw new Error('L\'ID doit être un nombre valide');
+      throw new BadRequestException('L\'ID doit être un nombre valide');
     }
-    const findedUser = await this.userRepository.findOne({
-      where: { id: idNumber },
-      select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
-    });
-    if (findedUser !== null) {
+
+    try {
+      const findedUser = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.id = :id', { id: idNumber })
+        .addSelect('user.password') // Sélection de plusieurs colonnes
+        .getOne();
+
+      if (!findedUser) {
+        throw new NotFoundException('Utilisateur non trouvé avec cet ID');
+      }
+
       return findedUser;
-    } else {
-      return null;
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Erreur lors de la recherche de l\'utilisateur');
     }
   }
 
