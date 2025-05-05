@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -58,22 +58,33 @@ export class UserService {
   }
 
   async getCurrentUser(token: string): Promise<User> {
+    if (!token) {
+      throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
+    }
+
     try {
-      if (!token) {
-        throw new Error("Nous n'avons pas trouvé vos informations. Si l'erreur persiste, essayez de vous reconnecter");
-      }
       const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOne({
         where: { id: decoded.sub },
         relations: ['comments'],
       });
-      if (currentUser !== null) {
-        return currentUser;
-      } else {
-        return null;
+
+      if (!currentUser) {
+        throw new NotFoundException("L'utilisateur associé au token n'existe pas");
       }
+
+      return currentUser;
     } catch (error) {
       console.error(error);
+      if (
+        error instanceof NotFoundException ||
+        error instanceof UnauthorizedException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la récupération de l’utilisateur',
+      );
     }
   }
 
