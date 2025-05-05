@@ -148,39 +148,50 @@ export class UserService {
     }
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, token: string): Promise<string> {
+  async updateUser(updateUserDto: UpdateUserDto, token: string): Promise<ResponseMessage> {
     const { pseudo, email } = updateUserDto;
+
+    if (!token) {
+      throw new BadRequestException("Token manquant ou invalide");
+    }
     try {
-      if (!token) {
-        return "Un problème est survenu lors de l'envoi du formulaire";
-      } else {
-        const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-        const findedUser = await this.userRepository.findOne({
-          where: { id: decoded.sub },
-          select: ['id', 'pseudo', 'email', 'password', 'role', 'register_date'], // Inclure le password explicitement
-        });
-        // Vérifier si le pseudo ou l'email existe déjà dans la base de données
-        const userWithSamePseudo = await this.userRepository.findOne({
-          where: { pseudo },
-        });
-        const userWithSameEmail = await this.userRepository.findOne({
-          where: { email },
-        });
-        // Vérifier si le pseudo ou l'email existe déjà mais appartient à un autre utilisateur
-        if (userWithSamePseudo && userWithSamePseudo.id !== findedUser.id) {
-          return "Le pseudo est déjà utilisé par un autre utilisateur";
-        }
-        if (userWithSameEmail && userWithSameEmail.id !== findedUser.id) {
-          return "L'email est déjà utilisé par un autre utilisateur";
-        }
-        findedUser.pseudo = pseudo;
-        findedUser.email = email;
-        await this.userRepository.save(findedUser);
-        return "ok";
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+      const findedUser = await this.userRepository.createQueryBuilder('user')
+        .where('user.id = :id', { id: decoded.sub })
+        .addSelect('user.password') // Sélection des colonnes nécessaires
+        .getOne();
+
+      if (!findedUser) {
+        throw new NotFoundException("Utilisateur non trouvé");
       }
+
+      // Vérifier si le pseudo ou l'email existe déjà dans la base de données
+      const userWithSamePseudo = await this.userRepository.findOne({
+        where: { pseudo },
+      });
+      const userWithSameEmail = await this.userRepository.findOne({
+        where: { email },
+      });
+
+      // Vérifier si le pseudo ou l'email existe déjà mais appartient à un autre utilisateur
+      if (userWithSamePseudo && userWithSamePseudo.id !== findedUser.id) {
+        throw new BadRequestException("Le pseudo est déjà utilisé par un autre utilisateur");
+      }
+      if (userWithSameEmail && userWithSameEmail.id !== findedUser.id) {
+        throw new BadRequestException("L'email est déjà utilisé par un autre utilisateur");
+      }
+
+      findedUser.pseudo = pseudo;
+      findedUser.email = email;
+      await this.userRepository.save(findedUser);
+
+      return { message: "Votre profil a bien été modifié" };
     } catch (error) {
       console.error(error);
-      return "Une erreur est survenue lors de la modification de votre profil";
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error; // Propager les exceptions spécifiques
+      }
+      throw new InternalServerErrorException("Une erreur est survenue lors de la modification de votre profil");
     }
   }
 
