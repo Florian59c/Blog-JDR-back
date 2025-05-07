@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { GetEmailDto } from './dto/get-email.dto';
 import { FindUserByIdDto } from './dto/find-user-by-id.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -17,9 +18,9 @@ export class UserController {
   }
 
   @Post('getCurrentUser')
+  @UseGuards(JwtAuthGuard)
   getCurrentUser(@Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.userService.getCurrentUser(token);
+    return this.userService.getCurrentUser(req['user']);
   }
 
   @Get('getAllUsers')
@@ -38,13 +39,19 @@ export class UserController {
   }
 
   @Post('updateUser')
+  @UseGuards(JwtAuthGuard)
   updateUser(@Body() updateUserDto: UpdateUserDto, @Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.userService.updateUser(updateUserDto, token);
+    return this.userService.updateUser(updateUserDto, req['user']);
   }
 
   @Post('updatePassword')
   updatePassword(@Body() updatePasswordDto: UpdatePasswordDto) {
     return this.userService.updatePassword(updatePasswordDto);
+  }
+
+  @Post('deleteUser')
+  @UseGuards(JwtAuthGuard)
+  deleteUser(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    return this.userService.deleteUser(req['user'], res);
   }
 }

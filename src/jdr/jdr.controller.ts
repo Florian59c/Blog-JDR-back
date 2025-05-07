@@ -1,34 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { JdrService } from './jdr.service';
 import { CreateJdrDto } from './dto/create-jdr.dto';
-import { UpdateJdrDto } from './dto/update-jdr.dto';
+import { GetsortedJdrDto } from './dto/get-sorted-jdr.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 @Controller('jdr')
 export class JdrController {
-  constructor(private readonly jdrService: JdrService) {}
+  constructor(private readonly jdrService: JdrService) { }
 
-  @Post()
-  create(@Body() createJdrDto: CreateJdrDto) {
-    return this.jdrService.create(createJdrDto);
+  @Post('createJdr')
+  @UseGuards(AdminGuard)
+  createJdr(@Body() createJdrDto: CreateJdrDto) {
+    return this.jdrService.createJdr(createJdrDto);
   }
 
-  @Get()
-  findAll() {
-    return this.jdrService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.jdrService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateJdrDto: UpdateJdrDto) {
-    return this.jdrService.update(+id, updateJdrDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.jdrService.remove(+id);
+  @Post('getsortedJdr')
+  getsortedJdr(@Body() getsortedJdrDto: GetsortedJdrDto) {
+    return this.jdrService.getsortedJdr(getsortedJdrDto);
   }
 }
