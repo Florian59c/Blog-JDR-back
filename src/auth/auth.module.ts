@@ -15,7 +15,7 @@ import { User } from 'src/user/entities/user.entity';
     JwtModule.registerAsync({
       useFactory: () => ({
         secret: process.env.JWT_SECRET || 'default-secret-key', // Ajoute une valeur par défaut
-        signOptions: { expiresIn: '90d' }, // Durée de validité
+        signOptions: { expiresIn: process.env.JWT_COOKIE_EXPIRY }, // Durée de validité dans .env
       }),
     }),
     TypeOrmModule.forFeature([User]),

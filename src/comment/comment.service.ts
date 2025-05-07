@@ -12,6 +12,7 @@ import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
 import { ModifyCommentDto } from './dto/modify-comment.dto';
 import { ResponseMessage } from 'src/interfaces/response.interface';
+import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class CommentService {
@@ -28,16 +29,11 @@ export class CommentService {
     private readonly jdrRepository: Repository<Jdr>,
   ) { }
 
-  async createComment(createCommentDto: CreateCommentDto, token: string): Promise<ResponseMessage> {
+  async createComment(createCommentDto: CreateCommentDto, userPayload: JwtPayload): Promise<ResponseMessage> {
     const { content, postType, postId } = createCommentDto;
 
-    if (!token) {
-      throw new UnauthorizedException('Vous devez être connecté pour ajouter un commentaire');
-    }
-
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await this.userRepository.findOneBy({ id: decoded.sub });
+      const user = await this.userRepository.findOneBy({ id: userPayload.sub });
 
       if (!user) {
         throw new UnauthorizedException('Utilisateur introuvable, veuillez vous reconnecter.');
@@ -101,10 +97,6 @@ export class CommentService {
         .orderBy('comment.creation_date', 'DESC')
         .getMany();
 
-      if (comments.length === 0) {
-        throw new NotFoundException('Aucun commentaire trouvé pour ce post'); // Si aucun commentaire n'est trouvé, lève une exception NotFoundException
-      }
-
       return comments;
     } catch (error) {
       console.error(error);
@@ -112,16 +104,11 @@ export class CommentService {
     }
   }
 
-  async reportComment(reportCommentDto: ReportCommentDto, token: string): Promise<ResponseMessage> {
+  async reportComment(reportCommentDto: ReportCommentDto, userPayload: JwtPayload): Promise<ResponseMessage> {
     const { commentId } = reportCommentDto;
 
-    if (!token) {
-      throw new UnauthorizedException('Seuls les utilisateurs connectés peuvent signaler un commentaire.');
-    }
-
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await this.userRepository.findOneBy({ id: decoded.sub });
+      const user = await this.userRepository.findOneBy({ id: userPayload.sub });
       if (!user) {
         throw new NotFoundException('Utilisateur introuvable.');
       }
@@ -186,27 +173,13 @@ export class CommentService {
     }
   }
 
-  async getCurrentUserComments(token: string): Promise<Comment[]> {
-    if (!token) {
-      throw new UnauthorizedException('Seuls les utilisateurs connectés peuvent voir leurs commentaires');
-    }
-
-    let decoded: any;
+  async getCurrentUserComments(userPayload: JwtPayload): Promise<Comment[]> {
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('Votre session a expiré. Veuillez vous reconnecter.');
+      const currentUser = await this.userRepository.findOneBy({ id: userPayload.sub });
+      if (!currentUser) {
+        throw new NotFoundException('Utilisateur introuvable');
       }
-      throw new UnauthorizedException('Jeton invalide');
-    }
 
-    const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
-    if (!currentUser) {
-      throw new NotFoundException('Utilisateur introuvable');
-    }
-
-    try {
       const findedComments = await this.commentRepository.find({
         where: { user: { id: currentUser.id } },
         order: {
@@ -220,16 +193,11 @@ export class CommentService {
     }
   }
 
-  async modifyCommentByUser(modifyCommentDto: ModifyCommentDto, token: string): Promise<ResponseMessage> {
+  async modifyCommentByUser(modifyCommentDto: ModifyCommentDto, userPayload: JwtPayload): Promise<ResponseMessage> {
     const { commentId, content } = modifyCommentDto;
 
-    if (!token) {
-      throw new UnauthorizedException('Vous devez être connecté pour faire la modification');
-    }
-
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const currentUser = await this.userRepository.findOneBy({ id: userPayload.sub });
       if (!currentUser) {
         throw new NotFoundException('Utilisateur introuvable');
       }
@@ -255,14 +223,9 @@ export class CommentService {
     }
   }
 
-  async deleteCommentByUser(token: string, id: number): Promise<ResponseMessage> {
-    if (!token) {
-      throw new UnauthorizedException('Vous devez être connecté pour faire la suppression');
-    }
-
+  async deleteCommentByUser(userPayload: JwtPayload, id: number): Promise<ResponseMessage> {
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const currentUser = await this.userRepository.findOneBy({ id: userPayload.sub });
       if (!currentUser) {
         throw new NotFoundException('Utilisateur introuvable');
       }

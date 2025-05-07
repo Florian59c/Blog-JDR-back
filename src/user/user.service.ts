@@ -12,6 +12,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/interfaces/response.interface';
+import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class UserService {
@@ -57,15 +58,10 @@ export class UserService {
     }
   }
 
-  async getCurrentUser(token: string): Promise<User> {
-    if (!token) {
-      throw new Error('Nous n\'avons pas trouvé vos informations. Si l\'erreur persiste, essayez de vous reconnecter');
-    }
-
+  async getCurrentUser(userPayload: JwtPayload): Promise<User> {
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const currentUser = await this.userRepository.findOne({
-        where: { id: decoded.sub },
+        where: { id: userPayload.sub },
         relations: ['comments'],
       });
 
@@ -148,16 +144,12 @@ export class UserService {
     }
   }
 
-  async updateUser(updateUserDto: UpdateUserDto, token: string): Promise<ResponseMessage> {
+  async updateUser(updateUserDto: UpdateUserDto, userPayload: JwtPayload): Promise<ResponseMessage> {
     const { pseudo, email } = updateUserDto;
 
-    if (!token) {
-      throw new BadRequestException('Token manquant ou invalide');
-    }
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
       const findedUser = await this.userRepository.createQueryBuilder('user')
-        .where('user.id = :id', { id: decoded.sub })
+        .where('user.id = :id', { id: userPayload.sub })
         .addSelect('user.password') // Sélection des colonnes nécessaires
         .getOne();
 
@@ -238,14 +230,9 @@ export class UserService {
     }
   }
 
-  async deleteUser(token: string, res: Response): Promise<ResponseMessage> {
-    if (!token) {
-      throw new BadRequestException('Vous devez être connecté pour supprimer votre compte');
-    }
-
+  async deleteUser(userPayload: JwtPayload, res: Response): Promise<ResponseMessage> {
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-      const currentUser = await this.userRepository.findOneBy({ id: decoded.sub });
+      const currentUser = await this.userRepository.findOneBy({ id: userPayload.sub });
 
       if (!currentUser) {
         throw new NotFoundException('Utilisateur introuvable');
