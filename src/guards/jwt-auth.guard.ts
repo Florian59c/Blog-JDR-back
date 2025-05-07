@@ -1,12 +1,14 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
-import { Request } from 'express';
+import { Request, Response } from 'express';
+import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest<Request>();
-        const token = request.cookies?.access_token;
+        const response = context.switchToHttp().getResponse<Response>();
+        const token = request.cookies?.['auth-token'];
 
         if (!token) {
             throw new UnauthorizedException('Token manquant. Veuillez vous connecter.');
@@ -18,6 +20,12 @@ export class JwtAuthGuard implements CanActivate {
             request['user'] = decoded;
             return true;
         } catch (error) {
+            response.clearCookie('auth-token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+            });
+
             if (error.name === 'TokenExpiredError') {
                 throw new UnauthorizedException('Votre session a expiré. Veuillez vous reconnecter.');
             }

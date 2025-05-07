@@ -8,6 +8,8 @@ import * as jwt from 'jsonwebtoken';
 import { UserRole } from 'src/interfaces/auth.interface';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ResponseMessage } from 'src/interfaces/response.interface';
+import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
+import * as ms from 'ms';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +33,7 @@ export class AuthService {
       res.cookie('auth-token', jwt, {
         httpOnly: true, // Empêche l'accès au cookie via JavaScript côté client
         secure: process.env.NODE_ENV === 'production', // Active uniquement en HTTPS en production
-        maxAge: 60 * 60 * 1000, // Durée de vie : 1 heure
+        maxAge: ms(process.env.JWT_COOKIE_EXPIRY), // Convertit la durée en millisecondes (ici : 90d est converti en ms, car maxAge a besoin de millisecondes)
         sameSite: 'strict', // Empêche l'envoi des cookies sur des requêtes cross-site
       });
 
@@ -59,17 +61,8 @@ export class AuthService {
     }
   }
 
-  checkRole(token: string): UserRole {
-    try {
-      if (!token) {
-        return { role: 'none' };  // Retourne 'none' si aucun token n'est fourni
-      } else {
-        const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-        return { role: decoded.role || 'none' };  // Retourne le rôle décodé, ou 'none' si absent
-      }
-    } catch (err) {
-      return { role: 'none' };  // Pour toutes les erreurs, retourne 'none'
-    }
+  checkRole(userPayload: JwtPayload): UserRole {
+    return { role: userPayload.role || 'none' };
   }
 
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<ResponseMessage> {

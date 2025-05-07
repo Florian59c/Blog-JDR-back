@@ -6,15 +6,16 @@ import { GetCommentsByPostDto } from './dto/get-comment-service.dto';
 import { ReportCommentDto } from './dto/report-comment.dto';
 import { ModifyCommentDto } from './dto/modify-comment.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Controller('comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) { }
 
   @Post('createComment')
+  @UseGuards(JwtAuthGuard)
   createComment(@Body() createCommentDto: CreateCommentDto, @Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.commentService.createComment(createCommentDto, token);
+    return this.commentService.createComment(createCommentDto, req['user']);
   }
 
   @Post('getCommentsByPost')
@@ -23,9 +24,9 @@ export class CommentController {
   }
 
   @Post('reportComment')
+  @UseGuards(JwtAuthGuard)
   reportComment(@Body() reportCommentDto: ReportCommentDto, @Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.commentService.reportComment(reportCommentDto, token);
+    return this.commentService.reportComment(reportCommentDto, req['user']);
   }
 
   @Get('getReportedComments')
@@ -41,21 +42,21 @@ export class CommentController {
   }
 
   @Post('getCurrentUserComments')
+  @UseGuards(JwtAuthGuard)
   getCurrentUserComments(@Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.commentService.getCurrentUserComments(token);
+    return this.commentService.getCurrentUserComments(req['user']);
   }
 
   @Post('modifyCommentByUser')
+  @UseGuards(JwtAuthGuard)
   modifyCommentByUser(@Body() modifyCommentDto: ModifyCommentDto, @Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.commentService.modifyCommentByUser(modifyCommentDto, token);
+    return this.commentService.modifyCommentByUser(modifyCommentDto, req['user']);
   }
 
   @Post('deleteCommentByUser')
+  @UseGuards(JwtAuthGuard)
   deleteCommentByUser(@Req() req: Request, @Body('id') id: number) {
-    const token = req.cookies['auth-token'];
-    return this.commentService.deleteCommentByUser(token, id);
+    return this.commentService.deleteCommentByUser(req['user'], id);
   }
 
   @Post('deleteCommentByAdmin')

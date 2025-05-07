@@ -1,8 +1,9 @@
-import { Controller, Post, Res, Body, Req } from '@nestjs/common';
+import { Controller, Post, Res, Body, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login-auth.dto';
 import { Response, Request } from 'express';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -19,9 +20,9 @@ export class AuthController {
   }
 
   @Post('checkRole')
+  @UseGuards(JwtAuthGuard)
   checkRole(@Req() req: Request) {
-    const token = req.cookies['auth-token'];
-    return this.authService.checkRole(token);
+    return this.authService.checkRole(req['user']);
   }
 
   @Post('resetPassword')
