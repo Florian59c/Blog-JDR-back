@@ -1,7 +1,8 @@
 export interface LatestContent {
+    uid: string;
     id: number;
     title: string;
-    link: string;
     date: Date;
-    type: 'jdr' | 'news' | 'yourHeroStories';
+    page_name: 'Nouvelle' | 'JDR' | 'Histoire dont vous êtes le héros';
+    page_link: 'jdr' | 'news' | 'yourHeroStories';
 }
