@@ -11,6 +11,7 @@ import { JdrListModule } from './jdr_list/jdr_list.module';
 import { JdrModule } from './jdr/jdr.module';
 import { HeroModule } from './hero/hero.module';
 import { NewsModule } from './news/news.module';
+import { LatestContentModule } from './latest-content/latest-content.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { NewsModule } from './news/news.module';
     HeroModule,
     JdrModule,
     JdrListModule,
+    LatestContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
