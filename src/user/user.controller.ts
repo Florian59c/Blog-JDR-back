@@ -41,7 +41,7 @@ export class UserController {
   }
 
   @Post('findUserByPseudo')
-  // @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard)
   findUserByPseudo(@Body() findUserByPseudoDto: FindUserByPseudoDto) {
     return this.userService.findUserByPseudo(findUserByPseudoDto);
   }
