@@ -13,6 +13,7 @@ import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/interfaces/response.interface';
 import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
+import { FindUserByPseudoDto } from './dto/find-user-by-pseudo.dto';
 
 @Injectable()
 export class UserService {
@@ -144,6 +145,29 @@ export class UserService {
     }
   }
 
+  async findUserByPseudo(findUserByPseudoDto: FindUserByPseudoDto): Promise<Pick<User, 'id' | 'email' | 'pseudo'>> {
+    const { pseudo } = findUserByPseudoDto;
+
+    try {
+      const findedUser = await this.userRepository
+        .createQueryBuilder('user')
+        .select(['user.id', 'user.email', 'user.pseudo']) // Sélection ciblée
+        .where('user.pseudo = :pseudo', { pseudo })
+        .getOne();
+
+      if (!findedUser) {
+        throw new NotFoundException('Utilisateur non trouvé avec ce pseudo');
+      }
+
+      return findedUser;
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Erreur lors de la recherche de l\'utilisateur');
+    }
+  }
+
   async updateUser(updateUserDto: UpdateUserDto, userPayload: JwtPayload): Promise<ResponseMessage> {
     const { pseudo, email } = updateUserDto;
 
@@ -247,6 +271,28 @@ export class UserService {
       });
 
       return { message: 'Votre compte a été supprimé avec succès' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du compte');
+    }
+  }
+
+  async deleteUserByAdmin(id: number): Promise<ResponseMessage> {
+    if (!id) {
+      throw new BadRequestException('L\'id de l\'utilisateur est obligatoire');
+    }
+
+    try {
+      const user = await this.userRepository.findOneBy({ id });
+
+      if (!user) {
+        throw new NotFoundException('Utilisateur introuvable');
+      }
+
+      await this.userRepository.delete(user.id);
+
+      return { message: 'L\'utilisateur a été banni' };
     } catch (error) {
       console.error(error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
