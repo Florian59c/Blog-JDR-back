@@ -7,6 +7,8 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Request, Response } from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
+import { FindUserByPseudoDto } from './dto/find-user-by-pseudo.dto';
+import { AdminGuard } from 'src/guards/admin.guard';
 
 @Controller('user')
 export class UserController {
@@ -36,6 +38,12 @@ export class UserController {
   @Post('findUserById')
   findUserById(@Body() findUserByIdDto: FindUserByIdDto) {
     return this.userService.findUserById(findUserByIdDto);
+  }
+
+  @Post('findUserByPseudo')
+  // @UseGuards(AdminGuard)
+  findUserByPseudo(@Body() findUserByPseudoDto: FindUserByPseudoDto) {
+    return this.userService.findUserByPseudo(findUserByPseudoDto);
   }
 
   @Post('updateUser')

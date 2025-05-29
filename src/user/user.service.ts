@@ -13,6 +13,7 @@ import * as jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { ResponseMessage } from 'src/interfaces/response.interface';
 import { JwtPayload } from 'src/interfaces/jwt-payload.interface';
+import { FindUserByPseudoDto } from './dto/find-user-by-pseudo.dto';
 
 @Injectable()
 export class UserService {
@@ -133,6 +134,29 @@ export class UserService {
 
       if (!findedUser) {
         throw new NotFoundException('Utilisateur non trouvé avec cet ID');
+      }
+
+      return findedUser;
+    } catch (error) {
+      console.error(error);
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Erreur lors de la recherche de l\'utilisateur');
+    }
+  }
+
+  async findUserByPseudo(findUserByPseudoDto: FindUserByPseudoDto): Promise<Pick<User, 'id' | 'email' | 'pseudo'>> {
+    const { pseudo } = findUserByPseudoDto;
+
+    try {
+      const findedUser = await this.userRepository
+        .createQueryBuilder('user')
+        .select(['user.id', 'user.email', 'user.pseudo']) // Sélection ciblée
+        .where('user.pseudo = :pseudo', { pseudo })
+        .getOne();
+
+      if (!findedUser) {
+        throw new NotFoundException('Utilisateur non trouvé avec ce pseudo');
       }
 
       return findedUser;
