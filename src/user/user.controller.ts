@@ -62,4 +62,10 @@ export class UserController {
   deleteUser(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     return this.userService.deleteUser(req['user'], res);
   }
+
+  @Post('deleteUserByAdmin')
+  @UseGuards(AdminGuard)
+  deleteUserByAdmin(@Body('id') id: number) {
+    return this.userService.deleteUserByAdmin(id);
+  }
 }

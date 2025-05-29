@@ -277,4 +277,26 @@ export class UserService {
       throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du compte');
     }
   }
+
+  async deleteUserByAdmin(id: number): Promise<ResponseMessage> {
+    if (!id) {
+      throw new BadRequestException('L\'id de l\'utilisateur est obligatoire');
+    }
+
+    try {
+      const user = await this.userRepository.findOneBy({ id });
+
+      if (!user) {
+        throw new NotFoundException('Utilisateur introuvable');
+      }
+
+      await this.userRepository.delete(user.id);
+
+      return { message: 'L\'utilisateur a été banni' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression du compte');
+    }
+  }
 }
