@@ -138,10 +138,6 @@ export class CommentService {
         relations: ['user']
       });
 
-      if (reportedComments.length === 0) {
-        throw new NotFoundException('Aucun commentaire signalé trouvé.');
-      }
-
       return reportedComments;
     } catch (error) {
       console.error(error);
