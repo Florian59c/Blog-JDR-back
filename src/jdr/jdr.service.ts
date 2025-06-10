@@ -86,4 +86,18 @@ export class JdrService {
       throw new InternalServerErrorException('Une erreur est survenue lors de la récupération des JDR.');
     }
   }
+
+  async findAllJdrWithNewDate(): Promise<Jdr[]> {
+    try {
+      return await this.jdrRepository.find({
+        order: { date: 'DESC' },
+        relations: ['comments'],
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        'Un problème est survenu lors de la récupération des JDR.'
+      );
+    }
+  }
 }
