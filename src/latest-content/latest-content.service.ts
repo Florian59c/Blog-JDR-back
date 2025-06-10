@@ -9,9 +9,9 @@ export class LatestContentService {
   async find10LatestContent(): Promise<LatestContent[]> {
     try {
       return await this.dataSource.query(`
-        SELECT CONCAT('jdr_', id) AS uid, id, title, date, 'Nouvelle' AS page_name, 'jdr' AS page_link FROM jdr
+        SELECT CONCAT('jdr_', id) AS uid, id, title, date, 'JDR' AS page_name, 'jdr' AS page_link FROM jdr
         UNION ALL
-        SELECT CONCAT('news_', id) AS uid, id, title, date, 'JDR' AS page_name, 'news' AS page_link FROM news
+        SELECT CONCAT('news_', id) AS uid, id, title, date, 'Nouvelle' AS page_name, 'news' AS page_link FROM news
         UNION ALL
         SELECT CONCAT('hero_', id) AS uid, id, title, date, 'Histoire dont vous êtes le héros' AS page_name, 'yourHeroStories' AS page_link FROM hero
         ORDER BY date DESC
