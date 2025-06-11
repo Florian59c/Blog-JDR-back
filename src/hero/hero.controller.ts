@@ -24,4 +24,10 @@ export class HeroController {
   updateHero(@Body() updateHeroDto: UpdateHeroDto) {
     return this.heroService.updateHero(updateHeroDto);
   }
+
+  @Post('deleteHero')
+  @UseGuards(AdminGuard)
+  deleteHero(@Body('id') id: number) {
+    return this.heroService.deleteHero(id);
+  }
 }

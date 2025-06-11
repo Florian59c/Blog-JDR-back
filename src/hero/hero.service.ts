@@ -75,7 +75,25 @@ export class HeroService {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
-      throw new InternalServerErrorException('Une erreur est survenue lors de la modification de votre profil');
+      throw new InternalServerErrorException('Une erreur est survenue lors de la modification de l\'histoire dont vous êtes le héros');
+    }
+  }
+
+  async deleteHero(id: number): Promise<ResponseMessage> {
+    try {
+      const user = await this.heroRepository.findOneBy({ id });
+
+      if (!user) {
+        throw new NotFoundException('L\'histoire dont vous êtes le héros est introuvable');
+      }
+
+      await this.heroRepository.delete(user.id);
+
+      return { message: 'L\'histoire dont vous êtes le héros a bien été supprimé' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression de l\'histoire dont vous êtes le héros');
     }
   }
 }
