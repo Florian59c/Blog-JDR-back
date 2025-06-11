@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsString } from "class-validator";
 
 export class UpdateHeroDto {
+    @IsNotEmpty()
     id: number;
 
     @IsNotEmpty({ message: 'Le titre est obligatoire. ' })
