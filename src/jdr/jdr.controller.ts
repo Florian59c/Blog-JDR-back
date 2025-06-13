@@ -30,4 +30,10 @@ export class JdrController {
   updateJdr(@Body() updateJdrDto: UpdateJdrDto) {
     return this.jdrService.updateJdr(updateJdrDto);
   }
+
+  @Post('deleteJdr')
+  // @UseGuards(AdminGuard)
+  deleteJdr(@Body('id') id: number) {
+    return this.jdrService.deleteJdr(id);
+  }
 }

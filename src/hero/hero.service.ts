@@ -5,7 +5,6 @@ import { Hero } from './entities/hero.entity';
 import { Repository } from 'typeorm';
 import { ResponseMessage } from 'src/interfaces/response.interface';
 import { UpdateHeroDto } from './dto/update-hero.dto';
-import { JwtPayload } from 'jsonwebtoken';
 
 @Injectable()
 export class HeroService {
