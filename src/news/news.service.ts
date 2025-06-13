@@ -58,16 +58,16 @@ export class NewsService {
     const { id, title, link, tag } = updateNewsDto;
 
     try {
-      const findedHero = await this.newsRepository.findOneBy({ id })
+      const findedNews = await this.newsRepository.findOneBy({ id })
 
-      if (!findedHero) {
+      if (!findedNews) {
         throw new NotFoundException('Nouvelle non trouvé');
       }
 
-      findedHero.title = title;
-      findedHero.link = link;
-      findedHero.tag = tag;
-      await this.newsRepository.save(findedHero);
+      findedNews.title = title;
+      findedNews.link = link;
+      findedNews.tag = tag;
+      await this.newsRepository.save(findedNews);
 
       return { message: 'La modification a bien été effectué' };
     } catch (error) {
@@ -76,6 +76,24 @@ export class NewsService {
         throw error;
       }
       throw new InternalServerErrorException('Une erreur est survenue lors de la modification de la nouvelle');
+    }
+  }
+
+  async deleteNews(id: number): Promise<ResponseMessage> {
+    try {
+      const findedNews = await this.newsRepository.findOneBy({ id });
+
+      if (!findedNews) {
+        throw new NotFoundException('La nouvelle est introuvable');
+      }
+
+      await this.newsRepository.delete(findedNews.id);
+
+      return { message: 'La nouvelle a bien été supprimé' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
+      throw new InternalServerErrorException('Une erreur est survenue lors de la suppression de la nouvelle');
     }
   }
 }

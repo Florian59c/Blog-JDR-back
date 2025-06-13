@@ -24,4 +24,10 @@ export class NewsController {
   updateNews(@Body() updateNewsDto: UpdateNewsDto) {
     return this.newsService.updateNews(updateNewsDto);
   }
+
+  @Post('deleteNews')
+  @UseGuards(AdminGuard)
+  deleteNews(@Body('id') id: number) {
+    return this.newsService.deleteNews(id);
+  }
 }
