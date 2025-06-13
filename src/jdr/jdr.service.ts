@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateJdrDto } from './dto/create-jdr.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,6 +6,7 @@ import { Jdr } from './entities/jdr.entity';
 import { JdrList } from 'src/jdr_list/entities/jdr_list.entity';
 import { GetsortedJdrDto } from './dto/get-sorted-jdr.dto';
 import { ResponseMessage } from 'src/interfaces/response.interface';
+import { UpdateJdrDto } from './dto/update-jdr.dto';
 
 @Injectable()
 export class JdrService {
@@ -98,6 +99,52 @@ export class JdrService {
       throw new InternalServerErrorException(
         'Un problème est survenu lors de la récupération des JDR.'
       );
+    }
+  }
+
+  async updateJdr(updateJdrDto: UpdateJdrDto): Promise<ResponseMessage> {
+    const { id, title, link, is_scenario, jdr_list_id } = updateJdrDto;
+
+    try {
+      const findedJdr = await this.jdrRepository.findOneBy({ id });
+      if (!findedJdr) {
+        throw new NotFoundException('JDR non trouvé');
+      }
+
+      const existTitle = await this.jdrRepository
+        .createQueryBuilder('jdr')
+        .where('jdr.title = :title AND jdr.id != :id', { title, id })
+        .getOne();
+      if (existTitle) {
+        throw new BadRequestException('Le titre du JDR existe déjà');
+      }
+
+      const existLink = await this.jdrRepository
+        .createQueryBuilder('jdr')
+        .where('jdr.link = :link AND jdr.id != :id', { link, id })
+        .getOne();
+      if (existLink) {
+        throw new BadRequestException('Le lien du JDR existe déjà');
+      }
+
+      const findedjdrList = await this.jdrListRepository.findOneBy({ id: jdr_list_id });
+      if (!findedjdrList) {
+        throw new NotFoundException('Le nom du JDR spécifié n\'existe pas dans la liste');
+      }
+
+      findedJdr.title = title;
+      findedJdr.link = link;
+      findedJdr.is_scenario = is_scenario;
+      findedJdr.jdr_list = findedjdrList;
+      await this.jdrRepository.save(findedJdr);
+
+      return { message: 'La modification a bien été effectuée' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Une erreur est survenue lors de la modification du JDR');
     }
   }
 }
