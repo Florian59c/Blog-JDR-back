@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateNewsDto } from './dto/create-news.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { News } from './entities/news.entity';
 import { Repository } from 'typeorm';
 import { ResponseMessage } from 'src/interfaces/response.interface';
+import { UpdateNewsDto } from './dto/update-news.dto';
 
 @Injectable()
 export class NewsService {
@@ -50,6 +51,31 @@ export class NewsService {
       throw new InternalServerErrorException(
         'Un problème est survenu lors de la récupération des nouvelles.'
       );
+    }
+  }
+
+  async updateNews(updateNewsDto: UpdateNewsDto): Promise<ResponseMessage> {
+    const { id, title, link, tag } = updateNewsDto;
+
+    try {
+      const findedHero = await this.newsRepository.findOneBy({ id })
+
+      if (!findedHero) {
+        throw new NotFoundException('Nouvelle non trouvé');
+      }
+
+      findedHero.title = title;
+      findedHero.link = link;
+      findedHero.tag = tag;
+      await this.newsRepository.save(findedHero);
+
+      return { message: 'La modification a bien été effectué' };
+    } catch (error) {
+      console.error(error);
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Une erreur est survenue lors de la modification de la nouvelle');
     }
   }
 }
