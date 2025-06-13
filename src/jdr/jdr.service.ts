@@ -150,13 +150,16 @@ export class JdrService {
 
   async deleteJdr(id: number): Promise<ResponseMessage> {
     try {
-      const findedJdr = await this.jdrRepository.findOneBy({ id });
+      const findedJdr = await this.jdrRepository.findOne({
+        where: { id },
+        relations: ['comments'],
+      });
 
       if (!findedJdr) {
         throw new NotFoundException('Le JDR est introuvable');
       }
 
-      await this.jdrRepository.delete(findedJdr.id);
+      await this.jdrRepository.remove(findedJdr);
 
       return { message: 'Le JDR a bien été supprimé' };
     } catch (error) {

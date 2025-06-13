@@ -95,13 +95,16 @@ export class HeroService {
 
   async deleteHero(id: number): Promise<ResponseMessage> {
     try {
-      const findedHero = await this.heroRepository.findOneBy({ id });
+      const findedHero = await this.heroRepository.findOne({
+        where: { id },
+        relations: ['comments'],
+      });
 
       if (!findedHero) {
         throw new NotFoundException('L\'histoire dont vous êtes le héros est introuvable');
       }
 
-      await this.heroRepository.delete(findedHero.id);
+      await this.heroRepository.remove(findedHero);
 
       return { message: 'L\'histoire dont vous êtes le héros a bien été supprimé' };
     } catch (error) {

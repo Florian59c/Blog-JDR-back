@@ -256,13 +256,16 @@ export class UserService {
 
   async deleteUser(userPayload: JwtPayload, res: Response): Promise<ResponseMessage> {
     try {
-      const currentUser = await this.userRepository.findOneBy({ id: userPayload.sub });
+      const currentUser = await this.userRepository.findOne({
+        where: { id: userPayload.sub },
+        relations: ['comments'], // nécessaire pour la suppression en cascade avec remove
+      });
 
       if (!currentUser) {
         throw new NotFoundException('Utilisateur introuvable');
       }
 
-      await this.userRepository.delete(currentUser.id);
+      await this.userRepository.remove(currentUser);
 
       res.clearCookie('auth-token', {
         httpOnly: true,
@@ -284,13 +287,16 @@ export class UserService {
     }
 
     try {
-      const user = await this.userRepository.findOneBy({ id });
+      const user = await this.userRepository.findOne({
+        where: { id },
+        relations: ['comments'], // nécessaire pour la suppression en cascade avec remove
+      });
 
       if (!user) {
         throw new NotFoundException('Utilisateur introuvable');
       }
 
-      await this.userRepository.delete(user.id);
+      await this.userRepository.remove(user);
 
       return { message: 'L\'utilisateur a été banni' };
     } catch (error) {

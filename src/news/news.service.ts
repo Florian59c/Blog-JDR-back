@@ -96,13 +96,16 @@ export class NewsService {
 
   async deleteNews(id: number): Promise<ResponseMessage> {
     try {
-      const findedNews = await this.newsRepository.findOneBy({ id });
+      const findedNews = await this.newsRepository.findOne({
+        where: { id },
+        relations: ['comments'], // ajoute les relations nécessaires s’il y en a
+      });
 
       if (!findedNews) {
         throw new NotFoundException('La nouvelle est introuvable');
       }
 
-      await this.newsRepository.delete(findedNews.id);
+      await this.newsRepository.remove(findedNews);
 
       return { message: 'La nouvelle a bien été supprimé' };
     } catch (error) {

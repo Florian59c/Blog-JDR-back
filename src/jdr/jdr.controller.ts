@@ -32,7 +32,7 @@ export class JdrController {
   }
 
   @Post('deleteJdr')
-  // @UseGuards(AdminGuard)
+  @UseGuards(AdminGuard)
   deleteJdr(@Body('id') id: number) {
     return this.jdrService.deleteJdr(id);
   }
