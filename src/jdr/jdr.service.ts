@@ -92,7 +92,7 @@ export class JdrService {
     try {
       return await this.jdrRepository.find({
         order: { date: 'DESC' },
-        relations: ['comments'],
+        relations: ['comments', 'jdr_list'],
       });
     } catch (error) {
       console.error(error);
