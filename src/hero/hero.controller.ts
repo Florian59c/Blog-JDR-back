@@ -2,6 +2,7 @@ import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
 import { HeroService } from './hero.service';
 import { CreateHeroDto } from './dto/create-hero.dto';
 import { AdminGuard } from 'src/guards/admin.guard';
+import { UpdateHeroDto } from './dto/update-hero.dto';
 
 @Controller('hero')
 export class HeroController {
@@ -16,5 +17,17 @@ export class HeroController {
   @Get('getAllHeroWithNewDate')
   findAllHeroWithNewDate() {
     return this.heroService.findAllHeroWithNewDate();
+  }
+
+  @Post('updateHero')
+  @UseGuards(AdminGuard)
+  updateHero(@Body() updateHeroDto: UpdateHeroDto) {
+    return this.heroService.updateHero(updateHeroDto);
+  }
+
+  @Post('deleteHero')
+  @UseGuards(AdminGuard)
+  deleteHero(@Body('id') id: number) {
+    return this.heroService.deleteHero(id);
   }
 }
