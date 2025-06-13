@@ -58,10 +58,25 @@ export class HeroService {
     const { id, title, link, tag } = updateHeroDto;
 
     try {
-      const findedHero = await this.heroRepository.findOneBy({ id })
-
+      const findedHero = await this.heroRepository.findOneBy({ id });
       if (!findedHero) {
-        throw new NotFoundException('Histoire dont vous êtes le héros non trouvé');
+        throw new NotFoundException('Histoire dont vous êtes le héros non trouvée');
+      }
+
+      const existTitle = await this.heroRepository
+        .createQueryBuilder('hero')
+        .where('hero.title = :title AND hero.id != :id', { title, id })
+        .getOne();
+      if (existTitle) {
+        throw new BadRequestException('Le titre de l\'histoire existe déjà');
+      }
+
+      const existLink = await this.heroRepository
+        .createQueryBuilder('hero')
+        .where('hero.link = :link AND hero.id != :id', { link, id })
+        .getOne();
+      if (existLink) {
+        throw new BadRequestException('Le lien de l\'histoire existe déjà');
       }
 
       findedHero.title = title;
@@ -69,7 +84,7 @@ export class HeroService {
       findedHero.tag = tag;
       await this.heroRepository.save(findedHero);
 
-      return { message: 'La modification a bien été effectué' };
+      return { message: 'La modification a bien été effectuée' };
     } catch (error) {
       console.error(error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
