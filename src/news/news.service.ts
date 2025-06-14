@@ -58,10 +58,25 @@ export class NewsService {
     const { id, title, link, tag } = updateNewsDto;
 
     try {
-      const findedNews = await this.newsRepository.findOneBy({ id })
-
+      const findedNews = await this.newsRepository.findOneBy({ id });
       if (!findedNews) {
-        throw new NotFoundException('Nouvelle non trouvé');
+        throw new NotFoundException('Nouvelle non trouvée');
+      }
+
+      const existTitle = await this.newsRepository
+        .createQueryBuilder('news')
+        .where('news.title = :title AND news.id != :id', { title, id })
+        .getOne();
+      if (existTitle) {
+        throw new BadRequestException('Le titre de la nouvelle existe déjà');
+      }
+
+      const existLink = await this.newsRepository
+        .createQueryBuilder('news')
+        .where('news.link = :link AND news.id != :id', { link, id })
+        .getOne();
+      if (existLink) {
+        throw new BadRequestException('Le lien de la nouvelle existe déjà');
       }
 
       findedNews.title = title;
@@ -69,7 +84,7 @@ export class NewsService {
       findedNews.tag = tag;
       await this.newsRepository.save(findedNews);
 
-      return { message: 'La modification a bien été effectué' };
+      return { message: 'La modification a bien été effectuée' };
     } catch (error) {
       console.error(error);
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
@@ -81,13 +96,16 @@ export class NewsService {
 
   async deleteNews(id: number): Promise<ResponseMessage> {
     try {
-      const findedNews = await this.newsRepository.findOneBy({ id });
+      const findedNews = await this.newsRepository.findOne({
+        where: { id },
+        relations: ['comments'], // ajoute les relations nécessaires s’il y en a
+      });
 
       if (!findedNews) {
         throw new NotFoundException('La nouvelle est introuvable');
       }
 
-      await this.newsRepository.delete(findedNews.id);
+      await this.newsRepository.remove(findedNews);
 
       return { message: 'La nouvelle a bien été supprimé' };
     } catch (error) {
